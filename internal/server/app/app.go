@@ -18,7 +18,8 @@ func New() *App {
 
 func (app *App) Run() error {
 	defaultPage := func(w http.ResponseWriter, r *http.Request) {
-		io.WriteString(w, "YPrac Metrics and alerting service")
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	updateMetrics := func(w http.ResponseWriter, r *http.Request) {
@@ -31,17 +32,21 @@ func (app *App) Run() error {
 		urlPath := strings.Split(r.URL.Path, "/")
 		urlPathLen := len(urlPath)
 
-		if urlPathLen != 5 {
+		//if urlPathLen != 5 {
+		//	w.WriteHeader(http.StatusBadRequest)
+		//	return
+		//}
+
+		if urlPathLen < 4 {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		mtype := urlPath[2]
 		mtitle := urlPath[3]
-		mval := urlPath[4]
 
-		//check type and value in path
-		if mtype == "" || mval == "" {
+		//check type in path
+		if mtype == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -49,6 +54,18 @@ func (app *App) Run() error {
 		//check title in path
 		if mtitle == "" {
 			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		if urlPathLen < 5 {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		mval := urlPath[4]
+
+		if mval == "" {
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 

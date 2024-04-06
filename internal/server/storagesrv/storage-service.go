@@ -30,7 +30,7 @@ func (srv *StorageService) Save(mtype, mtitle, mval string) error {
 	//check metrics title
 	checkTitle := regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
 	if !checkTitle(mtitle) {
-		return fmt.Errorf("Title %s is not valid!", mtitle)
+		return fmt.Errorf("title %s is not valid", mtitle)
 	}
 
 	if mtype == metrics.GaugeKey {

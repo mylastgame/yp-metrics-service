@@ -19,7 +19,6 @@ func New() *App {
 func (app *App) Run() error {
 	defaultPage := func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		return
 	}
 
 	updateMetrics := func(w http.ResponseWriter, r *http.Request) {

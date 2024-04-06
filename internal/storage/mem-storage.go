@@ -15,7 +15,8 @@ func NewMemStorage() *MemStorage {
 }
 
 func (ms *MemStorage) AddCounter(key string, value metrics.Counter) {
-	if _, ok := ms.Counters[key]; ok {
+	_, ok := ms.Counters[key]
+	if ok {
 		ms.Counters[key] += value
 	} else {
 		ms.Counters[key] = value

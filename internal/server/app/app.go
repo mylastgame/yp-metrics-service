@@ -25,7 +25,6 @@ func (app *App) Run() error {
 		if r.Method != http.MethodPost {
 			// разрешаем только POST-запросы
 			w.WriteHeader(http.StatusMethodNotAllowed)
-			io.WriteString(w, "Only POST method is allowed")
 			return
 		}
 
@@ -33,7 +32,6 @@ func (app *App) Run() error {
 		urlPathLen := len(urlPath)
 
 		if urlPathLen != 5 {
-			io.WriteString(w, "Bad URL path")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -44,7 +42,6 @@ func (app *App) Run() error {
 
 		//check type and value in path
 		if mtype == "" || mval == "" {
-			io.WriteString(w, "Empty type or value")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -52,7 +49,6 @@ func (app *App) Run() error {
 		//check title in path
 		if mtitle == "" {
 			w.WriteHeader(http.StatusNotFound)
-			io.WriteString(w, "Metric title is required")
 			return
 		}
 

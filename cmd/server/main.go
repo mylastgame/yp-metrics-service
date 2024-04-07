@@ -1,12 +1,11 @@
 package main
 
 import (
-	"github.com/mylastgame/yp-metrics-service/internal/server/app"
+	"github.com/mylastgame/yp-metrics-service/internal/server"
 )
 
 func main() {
-	App := app.New()
-	if err := App.Run(); err != nil {
+	if err := server.Run(); err != nil {
 		panic(err)
 	}
 }

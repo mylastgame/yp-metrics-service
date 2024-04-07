@@ -1,90 +1,49 @@
 package app
 
 import (
-	"github.com/mylastgame/yp-metrics-service/internal/server/storagesrv"
-	"github.com/mylastgame/yp-metrics-service/internal/storage"
-	"io"
-	"net/http"
-	"strings"
+	"errors"
+	"github.com/mylastgame/yp-metrics-service/internal/domain/counter"
+	"github.com/mylastgame/yp-metrics-service/internal/domain/gauge"
+	counterRepo "github.com/mylastgame/yp-metrics-service/internal/storage/counter"
+	gaugeRepo "github.com/mylastgame/yp-metrics-service/internal/storage/gauge"
 )
 
 type App struct {
-	srv storagesrv.StorageServiceI
+	gaugeRepo   gauge.Repo
+	counterRepo counter.Repo
 }
 
 func New() *App {
-	return &App{srv: storagesrv.New(storage.NewMemStorage())}
+	return &App{
+		gaugeRepo:   gaugeRepo.NewMemRepo(),
+		counterRepo: counterRepo.NewMemRepo(),
+	}
 }
 
-func (app *App) Run() error {
-	defaultPage := func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusBadRequest)
+func (app *App) Save(mtype, title, val string) error {
+	if mtype == gauge.Key {
+		return app.SaveGauge(title, val)
 	}
 
-	updateMetrics := func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			// разрешаем только POST-запросы
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			return
-		}
-
-		urlPath := strings.Split(r.URL.Path, "/")
-		urlPathLen := len(urlPath)
-
-		//if urlPathLen != 5 {
-		//	w.WriteHeader(http.StatusBadRequest)
-		//	return
-		//}
-
-		if urlPathLen < 4 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		mtype := urlPath[2]
-		mtitle := urlPath[3]
-
-		//check type in path
-		if mtype == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		//check title in path
-		if mtitle == "" {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-
-		if urlPathLen < 5 {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		mval := urlPath[4]
-
-		if mval == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		if err := app.srv.Save(mtype, mtitle, mval); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, err.Error())
-			return
-		} else {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+	if mtype == counter.Key {
+		return app.SaveCounter(title, val)
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, defaultPage)
-	mux.HandleFunc(`/update/`, updateMetrics)
-	err := http.ListenAndServe(`:8080`, mux)
+	return errors.New("bad metric type")
+}
+
+func (app *App) SaveGauge(title, val string) error {
+	g, err := gauge.FromString(title, val)
 	if err != nil {
 		return err
 	}
+	return app.gaugeRepo.Save(g)
+}
 
-	return http.ListenAndServe(`:8080`, mux)
+func (app *App) SaveCounter(title, val string) error {
+	c, err := counter.FromString(title, val)
+	if err != nil {
+		return err
+	}
+	return app.counterRepo.Save(c)
 }

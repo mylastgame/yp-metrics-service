@@ -1,6 +1,7 @@
 package counter
 
 import (
+	"fmt"
 	counterDomain "github.com/mylastgame/yp-metrics-service/internal/domain/counter"
 )
 
@@ -20,6 +21,7 @@ func (r *MemRepo) Save(c *counterDomain.Counter) error {
 		r.storage[c.Title] += c.Val
 	}
 
+	fmt.Println("counter storage: ", r.storage)
 	return nil
 }
 

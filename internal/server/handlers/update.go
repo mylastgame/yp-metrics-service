@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"io"
 	"net/http"
@@ -54,6 +55,8 @@ func UpdateHandler(app *app.App) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		fmt.Println(r.URL.Path)
 
 		if err := app.Save(mtype, mtitle, mval); err != nil {
 			w.WriteHeader(http.StatusBadRequest)

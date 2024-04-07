@@ -14,6 +14,7 @@ func NewMemRepo() *MemRepo {
 
 func (r *MemRepo) Save(g *gauge.Gauge) error {
 	r.storage[g.Title] = g.Val
+	//fmt.Println("gauge storage: ", r.storage)
 	return nil
 }
 

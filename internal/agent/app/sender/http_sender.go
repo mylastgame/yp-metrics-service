@@ -12,7 +12,7 @@ type httpSender struct {
 	prefix string
 }
 
-func NewHttpSender(server, method, prefix string) *httpSender {
+func NewHTTPSender(server, method, prefix string) *httpSender {
 	return &httpSender{server: server, method: method, prefix: prefix}
 }
 

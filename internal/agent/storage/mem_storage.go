@@ -27,14 +27,14 @@ func (s *memStorage) SaveCounter(title string, value int64) {
 }
 
 func (s *memStorage) ResetCounters() {
-	for k, _ := range s.counters {
+	for k := range s.counters {
 		s.counters[k] = 0
 	}
 }
 
 func (s *memStorage) GetGauges() map[string]float64 {
 	res := make(map[string]float64)
-	for k, _ := range s.gauges {
+	for k := range s.gauges {
 		res[k] = s.gauges[k]
 	}
 	return res
@@ -42,7 +42,7 @@ func (s *memStorage) GetGauges() map[string]float64 {
 
 func (s *memStorage) GetCounters() map[string]int64 {
 	res := make(map[string]int64)
-	for k, _ := range s.counters {
+	for k := range s.counters {
 		res[k] = s.counters[k]
 	}
 

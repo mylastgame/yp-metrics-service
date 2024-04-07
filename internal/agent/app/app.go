@@ -31,14 +31,14 @@ func (a *app) Send() {
 	counters := a.storage.GetCounters()
 
 	for t, v := range gauges {
-		err := a.sender.Send(metric.Metric{"gauge", t, fmt.Sprintf("%f", v)})
+		err := a.sender.Send(metric.Metric{Mtype: "gauge", Title: t, Val: fmt.Sprintf("%f", v)})
 		if err != nil {
 			panic(err)
 		}
 	}
 
 	for t, v := range counters {
-		err := a.sender.Send(metric.Metric{"counter", t, fmt.Sprintf("%d", v)})
+		err := a.sender.Send(metric.Metric{Mtype: "counter", Title: t, Val: fmt.Sprintf("%d", v)})
 		if err != nil {
 			panic(err)
 		}

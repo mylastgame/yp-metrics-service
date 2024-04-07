@@ -27,7 +27,7 @@ func TestMemRepo_Get(t *testing.T) {
 				},
 			},
 			arg:   "cnt1",
-			want:  &counter.Counter{"cnt1", 1},
+			want:  &counter.Counter{Title: "cnt1", Val: 1},
 			want1: true,
 		},
 		{
@@ -84,8 +84,8 @@ func TestMemRepo_Save(t *testing.T) {
 			},
 			args: args{
 				v: []counter.Counter{
-					{"cnt1", 1},
-					{"cnt2", 1},
+					{Title: "cnt1", Val: 1},
+					{Title: "cnt2", Val: 1},
 				},
 			},
 			wantVal: []counter.ValType{counter.ValType(1), counter.ValType(1)},
@@ -98,9 +98,9 @@ func TestMemRepo_Save(t *testing.T) {
 			},
 			args: args{
 				v: []counter.Counter{
-					{"cnt1", 1},
-					{"cnt1", 1},
-					{"cnt2", 1},
+					{Title: "cnt1", Val: 1},
+					{Title: "cnt1", Val: 1},
+					{Title: "cnt2", Val: 1},
 				},
 			},
 			wantVal: []counter.ValType{counter.ValType(1), counter.ValType(2), counter.ValType(2)},

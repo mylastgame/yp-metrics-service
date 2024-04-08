@@ -2,6 +2,7 @@ package server
 
 import (
 	"flag"
+	"os"
 )
 
 var flagRunAddr string
@@ -15,7 +16,7 @@ func parseFlags() {
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 
-	//if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
-	//	flagRunAddr = envRunAddr
-	//}
+	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+		flagRunAddr = envRunAddr
+	}
 }

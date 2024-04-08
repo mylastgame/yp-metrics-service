@@ -48,5 +48,7 @@ func TestHandler_UpdateGaugeHandler(t *testing.T) {
 
 		require.True(t, ok, v.name)
 		assert.Equal(t, v.want, float64(c.Val), v.name)
+
+		resp.Body.Close()
 	}
 }

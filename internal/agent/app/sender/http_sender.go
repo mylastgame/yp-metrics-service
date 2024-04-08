@@ -1,7 +1,6 @@
 package sender
 
 import (
-	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/metric"
@@ -38,7 +37,7 @@ func (s *httpSender) Send(m metric.Metric) error {
 	}
 
 	if res.StatusCode() != http.StatusOK {
-		return errors.New(fmt.Sprintf("Response status code: %d, for url: %s", res.StatusCode(), req))
+		return fmt.Errorf("Response status code: %d, for url: %s", res.StatusCode(), req)
 	}
 
 	return nil

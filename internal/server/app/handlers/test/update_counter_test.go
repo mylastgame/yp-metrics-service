@@ -38,6 +38,7 @@ func TestUpdateCounterHandler(t *testing.T) {
 
 	for _, v := range testTable {
 		resp, _ := testRequest(t, ts, v.method, v.url)
+
 		assert.Equal(t, v.status, resp.StatusCode)
 
 		if !v.wantSuccess {
@@ -48,5 +49,7 @@ func TestUpdateCounterHandler(t *testing.T) {
 
 		require.True(t, ok)
 		assert.Equal(t, v.want, int64(c.Val))
+
+		resp.Body.Close()
 	}
 }

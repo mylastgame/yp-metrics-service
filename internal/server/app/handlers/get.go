@@ -9,21 +9,20 @@ func (h *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
 	gauges := h.GaugeRepo.GetAll()
 	counters := h.CounterRepo.GetAll()
 
-	gaugeHtml := "Gauges: <ol>"
+	gaugeHTML := "Gauges: <ol>"
 	//html.SliceToOlLi("Gauges", gauges)
 	for _, g := range gauges {
-		gaugeHtml += html.Tag("li", g)
+		gaugeHTML += html.Tag("li", g)
 	}
-	gaugeHtml += "</ol>"
+	gaugeHTML += "</ol>"
 
-	counterHtml := "Counters: <ol>"
+	counterHTML := "Counters: <ol>"
 	for _, c := range counters {
-		counterHtml += html.Tag("li", c)
+		counterHTML += html.Tag("li", c)
 	}
-	counterHtml += "</ol>"
+	counterHTML += "</ol>"
 
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(gaugeHtml + counterHtml))
-	return
+	w.Write([]byte(gaugeHTML + counterHTML))
 }

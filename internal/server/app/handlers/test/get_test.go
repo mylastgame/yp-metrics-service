@@ -38,12 +38,15 @@ func TestGetHandler(t *testing.T) {
 
 	for _, v := range testTable {
 		resp, get := testRequest(t, ts, v.method, v.url)
+
 		assert.Equal(t, v.status, resp.StatusCode, v.name)
 
 		if !v.wantSuccess {
 			continue
 		}
 		assert.Equal(t, v.want, get, v.name)
+
+		resp.Body.Close()
 	}
 }
 
@@ -61,17 +64,17 @@ func setup() (chi.Router, string) {
 	counterRepo.Add(&counter.Counter{Title: "c2", Val: counter.ValType(1)})
 	counterRepo.Add(&counter.Counter{Title: "c3", Val: counter.ValType(99)})
 
-	gaugeHtml := "Gauges: <ol>"
+	gaugeHTML := "Gauges: <ol>"
 	for _, g := range gaugeRepo.GetAll() {
-		gaugeHtml += html.Tag("li", g)
+		gaugeHTML += html.Tag("li", g)
 	}
-	gaugeHtml += "</ol>"
+	gaugeHTML += "</ol>"
 
-	counterHtml := "Counters: <ol>"
+	counterHTML := "Counters: <ol>"
 	for _, c := range counterRepo.GetAll() {
-		counterHtml += html.Tag("li", c)
+		counterHTML += html.Tag("li", c)
 	}
-	counterHtml += "</ol>"
+	counterHTML += "</ol>"
 
-	return r, gaugeHtml + counterHtml
+	return r, gaugeHTML + counterHTML
 }

@@ -1,21 +1,21 @@
 package server
 
 import (
+	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
-	"github.com/mylastgame/yp-metrics-service/internal/server/handlers"
+	"github.com/mylastgame/yp-metrics-service/internal/server/storage/counter"
+	"github.com/mylastgame/yp-metrics-service/internal/server/storage/gauge"
 	"net/http"
 )
 
 func Run() error {
-	App := app.New()
+	r := chi.NewRouter()
+	app.Setup(r, gauge.NewMemRepo(), counter.NewMemRepo())
 
-	mux := http.NewServeMux()
-	mux.HandleFunc(`/`, handlers.DefaultHandler())
-	mux.HandleFunc(`/update/`, handlers.UpdateHandler(App))
-	err := http.ListenAndServe(`:8080`, mux)
+	err := http.ListenAndServe(`:8080`, r)
 	if err != nil {
 		return err
 	}
 
-	return http.ListenAndServe(`:8080`, mux)
+	return nil
 }

@@ -1,6 +1,9 @@
 package gauge
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 const Key = "gauge"
 
@@ -22,4 +25,8 @@ func FromString(title, value string) (*Gauge, error) {
 	}
 
 	return New(title, ValType(v)), nil
+}
+
+func (g *Gauge) String() string {
+	return fmt.Sprintf("%s: %f", g.Title, g.Val)
 }

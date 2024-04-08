@@ -53,7 +53,7 @@ func Test_httpSender_Send(t *testing.T) {
 	s := httptest.NewServer(r)
 	defer s.Close()
 
-	sender := httpSender{fmt.Sprintf("%s/update", s.URL), http.MethodPost}
+	sender := httpSender{fmt.Sprintf("%s", s.URL), http.MethodPost, "update"}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

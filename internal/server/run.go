@@ -9,10 +9,12 @@ import (
 )
 
 func Run() error {
+	parseFlags()
+
 	r := chi.NewRouter()
 	app.Setup(r, gauge.NewMemRepo(), counter.NewMemRepo())
 
-	err := http.ListenAndServe(`:8080`, r)
+	err := http.ListenAndServe(flagRunAddr, r)
 	if err != nil {
 		return err
 	}

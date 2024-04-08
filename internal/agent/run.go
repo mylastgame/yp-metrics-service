@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/collector"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/sender"
@@ -10,15 +11,15 @@ import (
 )
 
 func Run() error {
-
-	Sender := sender.NewHTTPSender("http://localhost:8080/update", http.MethodPost)
+	parseFlags()
+	Sender := sender.NewHTTPSender(fmt.Sprintf("http://%s", endpointAddr), http.MethodPost, "update")
 	Storage := storage.NewMemStorage()
 	App := app.New(Storage, Sender, collector.New(Storage))
 
-	pollTicker := time.NewTicker(2 * time.Second)
+	pollTicker := time.NewTicker(time.Duration(pollInterval) * time.Second)
 	timer := time.NewTimer(100 * time.Millisecond)
 	<-timer.C
-	sendTicker := time.NewTicker(10 * time.Second)
+	sendTicker := time.NewTicker(time.Duration(reportInterval) * time.Second)
 
 	for {
 		select {

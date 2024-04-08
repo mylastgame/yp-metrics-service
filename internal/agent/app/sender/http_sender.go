@@ -11,14 +11,15 @@ import (
 type httpSender struct {
 	endpoint string
 	method   string
+	path     string
 }
 
-func NewHTTPSender(e, m string) *httpSender {
-	return &httpSender{endpoint: e, method: m}
+func NewHTTPSender(e, m, p string) *httpSender {
+	return &httpSender{endpoint: e, method: m, path: p}
 }
 
 func (s *httpSender) Send(m metric.Metric) error {
-	req := fmt.Sprintf("%s/%s/%s/%s", s.endpoint, m.Mtype, m.Title, m.Val)
+	req := fmt.Sprintf("%s/%s/%s/%s/%s", s.endpoint, s.path, m.Mtype, m.Title, m.Val)
 
 	client := resty.New()
 	client.

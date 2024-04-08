@@ -37,7 +37,7 @@ func (s *httpSender) Send(m metric.Metric) error {
 	}
 
 	if res.StatusCode() != http.StatusOK {
-		return fmt.Errorf("Response status code: %d, for url: %s", res.StatusCode(), req)
+		return fmt.Errorf("response status code: %d, for url: %s", res.StatusCode(), req)
 	}
 
 	return nil

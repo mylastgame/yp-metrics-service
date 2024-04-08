@@ -28,18 +28,19 @@ func parseFlags() {
 	if envReportInterval := os.Getenv("REPORT_INTERVAL"); envReportInterval != "" {
 		v, err := strconv.Atoi(envReportInterval)
 		if err != nil {
-			reportInterval = v
-		} else {
 			panic(err)
+		} else {
+			reportInterval = v
+
 		}
 	}
 
 	if envPollInterval := os.Getenv("POLL_INTERVAL"); envPollInterval != "" {
 		v, err := strconv.Atoi(envPollInterval)
 		if err != nil {
-			pollInterval = v
-		} else {
 			panic(err)
+		} else {
+			pollInterval = v
 		}
 	}
 }

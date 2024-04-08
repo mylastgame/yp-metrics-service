@@ -10,7 +10,7 @@ func (h *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
 	counters := h.CounterRepo.GetAll()
 
 	gaugeHtml := "Gauges: <ol>"
-	//html.SliceToOlLi(gauges, "li")
+	//html.SliceToOlLi("Gauges", gauges)
 	for _, g := range gauges {
 		gaugeHtml += html.Tag("li", g)
 	}

@@ -1,23 +1,25 @@
 package sender
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/metric"
+	"net/http"
 	"time"
 )
 
 type httpSender struct {
-	server string
-	method string
+	endpoint string
+	method   string
 }
 
-func NewHTTPSender(server, method, prefix string) *httpSender {
-	return &httpSender{server: server, method: method}
+func NewHTTPSender(e, m string) *httpSender {
+	return &httpSender{endpoint: e, method: m}
 }
 
 func (s *httpSender) Send(m metric.Metric) error {
-	req := fmt.Sprintf("%s/%s/%s/%s", s.server, m.Mtype, m.Title, m.Val)
+	req := fmt.Sprintf("%s/%s/%s/%s", s.endpoint, m.Mtype, m.Title, m.Val)
 
 	client := resty.New()
 	client.
@@ -28,20 +30,16 @@ func (s *httpSender) Send(m metric.Metric) error {
 		// длительность максимального ожидания
 		SetRetryMaxWaitTime(301 * time.Millisecond)
 
-	r, err := client.R().
+	res, err := client.R().
 		Post(req)
 
-	//r, err := http.NewRequest(s.method, req, nil)
-	//if err != nil {
-	//	return err
-	//}
-	//
-	//client := &http.Client{}
-	//res, err := client.Do(r)
 	if err != nil {
 		return err
 	}
-	//defer res.Body.Close()
+
+	if res.StatusCode() != http.StatusOK {
+		return errors.New(fmt.Sprintf("Response status code: %d, for url: %s", res.StatusCode(), req))
+	}
 
 	return nil
 }

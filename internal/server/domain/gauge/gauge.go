@@ -28,5 +28,5 @@ func FromString(title, value string) (*Gauge, error) {
 }
 
 func (g *Gauge) String() string {
-	return fmt.Sprintf("%s: %f", g.Title, g.Val)
+	return fmt.Sprintf("%s: %s", g.Title, strconv.FormatFloat(float64(g.Val), 'f', -1, 64))
 }

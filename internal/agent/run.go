@@ -11,7 +11,7 @@ import (
 
 func Run() error {
 
-	Sender := sender.NewHTTPSender("http://localhost:8080", http.MethodPost, "update")
+	Sender := sender.NewHTTPSender("http://localhost:8080/update", http.MethodPost)
 	Storage := storage.NewMemStorage()
 	App := app.New(Storage, Sender, collector.New(Storage))
 

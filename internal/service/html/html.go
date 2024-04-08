@@ -2,7 +2,7 @@ package html
 
 import "fmt"
 
-func SliceToOlLi(s []fmt.Stringer, title string) string {
+func SliceToOlLi(title string, s []fmt.Stringer) string {
 	var html string
 	if title != "" {
 		html = fmt.Sprintf("%s: <ol>", title)

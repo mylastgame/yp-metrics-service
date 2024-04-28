@@ -17,11 +17,10 @@ func (h *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
 		v, err := h.repo.Get(t, title)
 		if err == nil {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("%s", v)))
+			w.Write([]byte(v))
 			return
 		}
 	}
 
 	w.WriteHeader(http.StatusNotFound)
-	return
 }

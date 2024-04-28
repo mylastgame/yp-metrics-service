@@ -64,7 +64,9 @@ func (r *MemRepo) Set(t string, k string, v string) error {
 			return NewStorageError(BadValue, t, v)
 		}
 
-		if _, ok := r.counter[k]; ok {
+		_, ok := r.counter[k]
+
+		if ok {
 			r.counter[k] += c
 		} else {
 			r.counter[k] = c

@@ -26,7 +26,9 @@ func (s *memStorage) SaveCounter(title string, value int64) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	if _, ok := s.counters[title]; ok {
+	_, ok := s.counters[title]
+
+	if ok {
 		s.counters[title] += value
 	} else {
 		s.counters[title] = value

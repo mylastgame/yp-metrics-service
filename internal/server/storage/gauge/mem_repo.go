@@ -1,7 +1,7 @@
 package gauge
 
 import (
-	"github.com/mylastgame/yp-metrics-service/internal/domain/gauge"
+	"github.com/mylastgame/yp-metrics-service/internal/server/domain/gauge"
 )
 
 type MemRepo struct {
@@ -26,4 +26,14 @@ func (r *MemRepo) Get(title string) (*gauge.Gauge, bool) {
 	} else {
 		return &gauge.Gauge{}, ok
 	}
+}
+
+func (r *MemRepo) GetAll() []*gauge.Gauge {
+	res := make([]*gauge.Gauge, 0)
+
+	for t, v := range r.storage {
+		res = append(res, gauge.New(t, gauge.ValType(v)))
+	}
+
+	return res
 }

@@ -78,10 +78,6 @@ func (c *Collector) Collect() {
 	c.storage.SaveGauge(Sys, float64(m.Sys))
 	c.storage.SaveGauge(TotalAlloc, float64(m.TotalAlloc))
 
-	c.incPollCounter()
-	c.storage.SaveGauge(RandomValue, rand.Float64())
-}
-
-func (c *Collector) incPollCounter() {
 	c.storage.SaveCounter(PollCount, 1)
+	c.storage.SaveGauge(RandomValue, rand.Float64())
 }

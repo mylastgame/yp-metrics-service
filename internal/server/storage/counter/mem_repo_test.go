@@ -1,7 +1,7 @@
 package counter
 
 import (
-	"github.com/mylastgame/yp-metrics-service/internal/domain/counter"
+	"github.com/mylastgame/yp-metrics-service/internal/server/domain/counter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -114,7 +114,7 @@ func TestMemRepo_Save(t *testing.T) {
 			}
 
 			for i, a := range tt.args.v {
-				err := r.Save(&a)
+				err := r.Add(&a)
 				require.NoError(t, err)
 				assert.Equal(t, tt.wantVal[i], r.storage["cnt1"])
 			}

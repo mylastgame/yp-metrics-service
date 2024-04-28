@@ -1,6 +1,9 @@
 package counter
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 const Key = "counter"
 
@@ -22,4 +25,8 @@ func FromString(title, value string) (*Counter, error) {
 	}
 
 	return New(title, ValType(v)), nil
+}
+
+func (c *Counter) String() string {
+	return fmt.Sprintf("%s: %d", c.Title, c.Val)
 }

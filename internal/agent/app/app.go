@@ -24,6 +24,7 @@ func New(storage storage.Storage, sender sender.Sender, collector *collector.Col
 
 func (a *app) Collect() {
 	a.collector.Collect()
+	fmt.Println("Collect finished")
 }
 
 func (a *app) Send() {
@@ -33,18 +34,18 @@ func (a *app) Send() {
 	for t, v := range gauges {
 		err := a.sender.Send(metric.Metric{Mtype: "gauge", Title: t, Val: fmt.Sprintf("%f", v)})
 		if err != nil {
-			panic(err)
+			fmt.Println(err.Error())
 		}
 	}
 
 	for t, v := range counters {
 		err := a.sender.Send(metric.Metric{Mtype: "counter", Title: t, Val: fmt.Sprintf("%d", v)})
 		if err != nil {
-			panic(err)
+			fmt.Println(err.Error())
 		}
 	}
 
-	a.storage.ResetCounters()
+	fmt.Println("Sending finished")
 
-	fmt.Printf("Send\n")
+	a.storage.ResetCounters()
 }

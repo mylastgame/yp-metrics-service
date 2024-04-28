@@ -1,6 +1,7 @@
 package counter
 
 type Repo interface {
-	Save(*Counter) error
+	Add(*Counter) error
 	Get(string) (*Counter, bool)
+	GetAll() []*Counter
 }

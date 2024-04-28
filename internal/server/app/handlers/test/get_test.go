@@ -3,10 +3,7 @@ package test
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
-	"github.com/mylastgame/yp-metrics-service/internal/server/domain/counter"
-	"github.com/mylastgame/yp-metrics-service/internal/server/domain/gauge"
-	counterStrg "github.com/mylastgame/yp-metrics-service/internal/server/storage/counter"
-	gaugeStrg "github.com/mylastgame/yp-metrics-service/internal/server/storage/gauge"
+	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"github.com/mylastgame/yp-metrics-service/internal/service/html"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -30,9 +27,9 @@ func TestGetHandler(t *testing.T) {
 		{"case1", http.MethodGet, "/value/counter/c1", "1", true, http.StatusOK},
 		{"case2", http.MethodGet, "/value/counter/c3", "99", true, http.StatusOK},
 		{"case2", http.MethodGet, "/value/counter/c4", "", false, http.StatusNotFound},
-		{"case3", http.MethodGet, "/value/gauge/g1", "0.00001", true, http.StatusOK},
-		{"case3", http.MethodGet, "/value/gauge/g3", "99.076511", true, http.StatusOK},
-		{"case3", http.MethodGet, "/value/gauge/g4", "", false, http.StatusNotFound},
+		{"case4", http.MethodGet, "/value/gauge/g1", "0.00001", true, http.StatusOK},
+		{"case5", http.MethodGet, "/value/gauge/g3", "99.076511", true, http.StatusOK},
+		{"case6", http.MethodGet, "/value/gauge/g4", "", false, http.StatusNotFound},
 		//{"case3", http.MethodGet, "/", getAllHtml, true, http.StatusOK},
 	}
 
@@ -51,27 +48,24 @@ func TestGetHandler(t *testing.T) {
 }
 
 func setup() (chi.Router, string) {
-	r := chi.NewRouter()
-	gaugeRepo := gaugeStrg.NewMemRepo()
-	counterRepo := counterStrg.NewMemRepo()
-	app.Setup(r, gaugeRepo, counterRepo)
+	repo := storage.NewMemRepo()
+	r := app.NewRouter(repo)
 
-	gaugeRepo.Save(&gauge.Gauge{Title: "g1", Val: gauge.ValType(0.00001)})
-	gaugeRepo.Save(&gauge.Gauge{Title: "g2", Val: gauge.ValType(1)})
-	gaugeRepo.Save(&gauge.Gauge{Title: "g3", Val: gauge.ValType(99.076511)})
-
-	counterRepo.Add(&counter.Counter{Title: "c1", Val: counter.ValType(1)})
-	counterRepo.Add(&counter.Counter{Title: "c2", Val: counter.ValType(1)})
-	counterRepo.Add(&counter.Counter{Title: "c3", Val: counter.ValType(99)})
+	repo.Set("gauge", "g1", "0.00001")
+	repo.Set("gauge", "g2", "1")
+	repo.Set("gauge", "g3", "99.076511")
+	repo.Set("counter", "c1", "1")
+	repo.Set("counter", "c2", "1")
+	repo.Set("counter", "c3", "99")
 
 	gaugeHTML := "Gauges: <ol>"
-	for _, g := range gaugeRepo.GetAll() {
+	for _, g := range repo.GetGauges() {
 		gaugeHTML += html.Tag("li", g)
 	}
 	gaugeHTML += "</ol>"
 
 	counterHTML := "Counters: <ol>"
-	for _, c := range counterRepo.GetAll() {
+	for _, c := range repo.GetCounters() {
 		counterHTML += html.Tag("li", c)
 	}
 	counterHTML += "</ol>"

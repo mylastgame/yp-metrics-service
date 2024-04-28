@@ -7,21 +7,24 @@ import (
 	"net/http"
 )
 
-func (h *Handler) GetHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	t := chi.URLParam(r, "type")
 	title := chi.URLParam(r, "title")
-
-	fmt.Println("t: ", t, "title:", title)
+	val := chi.URLParam(r, "val")
+	fmt.Println("t: ", t, "title:", title, " val:", val)
 
 	if t == metrics.Gauge || t == metrics.Counter {
-		v, err := h.repo.Get(t, title)
+		err := h.repo.Set(t, title, val)
 		if err == nil {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fmt.Sprintf("%s", v)))
+			return
+		} else {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(err.Error()))
 			return
 		}
 	}
 
-	w.WriteHeader(http.StatusNotFound)
+	w.WriteHeader(http.StatusBadRequest)
 	return
 }

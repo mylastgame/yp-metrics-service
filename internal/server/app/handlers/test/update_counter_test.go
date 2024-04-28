@@ -1,10 +1,9 @@
 package test
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
-	"github.com/mylastgame/yp-metrics-service/internal/server/storage/counter"
-	"github.com/mylastgame/yp-metrics-service/internal/server/storage/gauge"
+	"github.com/mylastgame/yp-metrics-service/internal/server/domain/metrics"
+	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -16,22 +15,21 @@ func TestUpdateCounterHandler(t *testing.T) {
 	var testTable = []struct {
 		method      string
 		url         string
-		want        int64
+		want        string
 		wantSuccess bool
 		status      int
 	}{
-		{http.MethodPost, "/update/counter/c1/1", 1, true, http.StatusOK},
-		{http.MethodPost, "/update/counter/c1/1", 2, true, http.StatusOK},
-		{http.MethodPost, "/update/counter/c1/8", 10, true, http.StatusOK},
-		{http.MethodPost, "/update/counter/c2/2", 10, true, http.StatusOK},
-		{http.MethodPost, "/update/counter/c3/99", 10, true, http.StatusOK},
-		{http.MethodPost, "/update/counter/c1/8.1", 0, false, http.StatusBadRequest},
-		{http.MethodPost, "/update/counter/c1/8a", 0, false, http.StatusBadRequest},
+		{http.MethodPost, "/update/counter/c1/1", "1", true, http.StatusOK},
+		{http.MethodPost, "/update/counter/c1/1", "2", true, http.StatusOK},
+		{http.MethodPost, "/update/counter/c1/8", "10", true, http.StatusOK},
+		{http.MethodPost, "/update/counter/c2/2", "10", true, http.StatusOK},
+		{http.MethodPost, "/update/counter/c3/99", "10", true, http.StatusOK},
+		{http.MethodPost, "/update/counter/c1/8.1", "0", false, http.StatusBadRequest},
+		{http.MethodPost, "/update/counter/c1/8a", "0", false, http.StatusBadRequest},
 	}
 
-	r := chi.NewRouter()
-	repo := counter.NewMemRepo()
-	app.Setup(r, gauge.NewMemRepo(), repo)
+	repo := storage.NewMemRepo()
+	r := app.NewRouter(repo)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -45,10 +43,10 @@ func TestUpdateCounterHandler(t *testing.T) {
 			continue
 		}
 
-		c, ok := repo.Get("c1")
+		c, err := repo.Get(metrics.Counter, "c1")
 
-		require.True(t, ok)
-		assert.Equal(t, v.want, int64(c.Val))
+		require.NoError(t, err)
+		assert.Equal(t, v.want, c)
 
 		resp.Body.Close()
 	}

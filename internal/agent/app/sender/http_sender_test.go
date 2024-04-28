@@ -1,7 +1,6 @@
 package sender
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/metric"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
@@ -53,7 +52,7 @@ func Test_httpSender_Send(t *testing.T) {
 	s := httptest.NewServer(r)
 	defer s.Close()
 
-	sender := httpSender{fmt.Sprintf("%s/update", s.URL), http.MethodPost}
+	sender := httpSender{s.URL, http.MethodPost, "update"}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

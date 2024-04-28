@@ -1,10 +1,9 @@
 package test
 
 import (
-	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
-	"github.com/mylastgame/yp-metrics-service/internal/server/storage/counter"
-	"github.com/mylastgame/yp-metrics-service/internal/server/storage/gauge"
+	"github.com/mylastgame/yp-metrics-service/internal/server/domain/metrics"
+	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -17,21 +16,20 @@ func TestHandler_UpdateGaugeHandler(t *testing.T) {
 		name        string
 		method      string
 		url         string
-		want        float64
+		want        string
 		wantSuccess bool
 		status      int
 	}{
-		{"case1", http.MethodPost, "/update/gauge/c1/1", 1, true, http.StatusOK},
-		{"case2", http.MethodPost, "/update/gauge/c1/1", 1, true, http.StatusOK},
-		{"case3", http.MethodPost, "/update/gauge/c1/8.001", 8.001, true, http.StatusOK},
-		{"case3", http.MethodPost, "/update/gauge/c2/5", 8.001, true, http.StatusOK},
-		{"case4", http.MethodPost, "/update/gauge/c1/8,1", 0, false, http.StatusBadRequest},
-		{"case5", http.MethodPost, "/update/gauge/c1/8a", 0, false, http.StatusBadRequest},
+		{"case1", http.MethodPost, "/update/gauge/c1/1", "1", true, http.StatusOK},
+		{"case2", http.MethodPost, "/update/gauge/c1/1", "1", true, http.StatusOK},
+		{"case3", http.MethodPost, "/update/gauge/c1/8.001", "8.001", true, http.StatusOK},
+		{"case3", http.MethodPost, "/update/gauge/c2/5", "8.001", true, http.StatusOK},
+		{"case4", http.MethodPost, "/update/gauge/c1/8,1", "", false, http.StatusBadRequest},
+		{"case5", http.MethodPost, "/update/gauge/c1/8a", "", false, http.StatusBadRequest},
 	}
 
-	r := chi.NewRouter()
-	repo := gauge.NewMemRepo()
-	app.Setup(r, repo, counter.NewMemRepo())
+	repo := storage.NewMemRepo()
+	r := app.NewRouter(repo)
 
 	ts := httptest.NewServer(r)
 	defer ts.Close()
@@ -44,10 +42,10 @@ func TestHandler_UpdateGaugeHandler(t *testing.T) {
 			continue
 		}
 
-		c, ok := repo.Get("c1")
+		c, err := repo.Get(metrics.Gauge, "c1")
 
-		require.True(t, ok, v.name)
-		assert.Equal(t, v.want, float64(c.Val), v.name)
+		require.NoError(t, err, v.name)
+		assert.Equal(t, v.want, c, v.name)
 
 		resp.Body.Close()
 	}

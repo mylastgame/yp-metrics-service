@@ -1,18 +1,13 @@
 package handlers
 
 import (
-	"github.com/mylastgame/yp-metrics-service/internal/server/domain/counter"
-	"github.com/mylastgame/yp-metrics-service/internal/server/domain/gauge"
+	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 )
 
 type Handler struct {
-	GaugeRepo   gauge.Repo
-	CounterRepo counter.Repo
+	repo storage.Repo
 }
 
-func NewHandler(gr gauge.Repo, cr counter.Repo) *Handler {
-	return &Handler{
-		GaugeRepo:   gr,
-		CounterRepo: cr,
-	}
+func NewHandler(r storage.Repo) *Handler {
+	return &Handler{repo: r}
 }

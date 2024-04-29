@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/server/domain/metrics"
 	"net/http"
@@ -11,7 +10,6 @@ func (h *Handler) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 	t := chi.URLParam(r, "type")
 	title := chi.URLParam(r, "title")
 	val := chi.URLParam(r, "val")
-	fmt.Println("t: ", t, "title:", title, " val:", val)
 
 	if t == metrics.Gauge || t == metrics.Counter {
 		err := h.repo.Set(t, title, val)

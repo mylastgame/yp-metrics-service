@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
@@ -10,11 +10,16 @@ import (
 
 func main() {
 	config.ParseFlags()
-	fmt.Println(config.RunAddr)
+	err := logger.Initialize(config.LogLevel)
+	if err != nil {
+		panic(err)
+	}
 
 	r := app.NewRouter(storage.NewMemRepo())
 
-	err := http.ListenAndServe(config.RunAddr, r)
+	logger.Sugar.Infof("Starting server. Listening on %s", config.RunAddr)
+	err = http.ListenAndServe(config.RunAddr, r)
+
 	if err != nil {
 		panic(err)
 	}

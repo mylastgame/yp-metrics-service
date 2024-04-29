@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/domain/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
@@ -31,6 +32,7 @@ func TestUpdateCounterHandler(t *testing.T) {
 	repo := storage.NewMemRepo()
 	r := app.NewRouter(repo)
 
+	logger.Initialize("info")
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 

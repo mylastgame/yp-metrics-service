@@ -6,6 +6,8 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
+	"github.com/mylastgame/yp-metrics-service/internal/service"
+	"log"
 	"net/http"
 	"time"
 )
@@ -27,6 +29,12 @@ func (s *RESTSender) Send(m metrics.Metrics) error {
 		return err
 	}
 
+	// сжимаем содержимое data
+	bodyCompressed, err := service.Compress(body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	req := fmt.Sprintf("%s/%s/", s.endpoint, s.path)
 	client := resty.New()
 	client.
@@ -39,7 +47,8 @@ func (s *RESTSender) Send(m metrics.Metrics) error {
 
 	res, err := client.R().
 		SetHeader("Content-Type", "application/json").
-		SetBody(body).
+		SetHeader("Content-Encoding", "gzip").
+		SetBody(bodyCompressed).
 		Post(req)
 
 	if err != nil {

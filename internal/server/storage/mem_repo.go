@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/mylastgame/yp-metrics-service/internal/server/domain/metrics"
+	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/service/convert"
 	"sync"
 )
@@ -76,6 +76,51 @@ func (r *MemRepo) Set(t string, k string, v string) error {
 	}
 
 	return NewStorageError(BadMetricType, t, k)
+}
+
+func (r *MemRepo) SetGauge(k string, v float64) {
+	r.m.Lock()
+	defer r.m.Unlock()
+	r.gauge[k] = v
+}
+
+func (r *MemRepo) SetCounter(k string, v int64) {
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	_, ok := r.counter[k]
+
+	if ok {
+		r.counter[k] += v
+	} else {
+		r.counter[k] = v
+	}
+}
+
+func (r *MemRepo) GetCounter(k string) (int64, bool) {
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	v, ok := r.counter[k]
+
+	if ok {
+		return v, ok
+	} else {
+		return 0, ok
+	}
+}
+
+func (r *MemRepo) GetGauge(k string) (float64, bool) {
+	r.m.Lock()
+	defer r.m.Unlock()
+
+	v, ok := r.gauge[k]
+
+	if ok {
+		return v, ok
+	} else {
+		return 0, ok
+	}
 }
 
 func (r *MemRepo) GetCounters() []string {

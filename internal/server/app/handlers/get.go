@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/mylastgame/yp-metrics-service/internal/server/domain/metrics"
+	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"net/http"
 )
 

@@ -24,8 +24,9 @@ func NewRouter(repo storage.Repo) chi.Router {
 	//})
 
 	r.Post("/update/{type}/{title}/{val}", midleware.WithLogging(h.UpdateHandler))
+	r.Post("/update/", midleware.WithLogging(h.RestUpdateHandler))
 	r.Get("/value/{type}/{title}", midleware.WithLogging(h.GetHandler))
-
+	r.Post("/value/", midleware.WithLogging(h.RestGetHandler))
 	//r.Route("/value", func(r chi.Router) {
 	//	r.Get("/gauge/{title}", h.GetGaugeHandler)
 	//	r.Get("/counter/{title}", h.GetCounterHandler)

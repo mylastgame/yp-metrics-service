@@ -28,7 +28,9 @@ func (h *Handler) RestUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		h.repo.SetGauge(metric.ID, *metric.Value)
 		val, ok := h.repo.GetGauge(metric.ID)
 		if !ok {
-			val = 0
+			logger.Log.Error("error when getting updated metric value", zap.Error(err))
+			http.Error(w, "error when getting updated metric value", http.StatusBadRequest)
+			return
 		}
 		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Value: &val})
 		return
@@ -42,14 +44,14 @@ func (h *Handler) RestUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.repo.SetCounter(metric.ID, *metric.Delta)
-		var val float64
-		v, ok := h.repo.GetCounter(metric.ID)
+		val, ok := h.repo.GetCounter(metric.ID)
 		if !ok {
-			val = 0
-		} else {
-			val = float64(v)
+			logger.Log.Error("error when getting updated metric value", zap.Error(err))
+			http.Error(w, "error when getting updated metric value", http.StatusBadRequest)
+			return
 		}
-		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Value: &val})
+
+		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Delta: &val})
 		return
 	}
 

@@ -40,16 +40,15 @@ func (h *Handler) RestGetHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "empty ID for counter metric", http.StatusNotFound)
 			return
 		}
-		var val float64
-		v, ok := h.repo.GetCounter(metric.ID)
+
+		val, ok := h.repo.GetCounter(metric.ID)
 		if !ok {
 			logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
 			http.Error(w, "metric not found", http.StatusNotFound)
 			return
-		} else {
-			val = float64(v)
 		}
-		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Value: &val})
+		//sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Value: &val})
+		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Delta: &val})
 		return
 	}
 

@@ -27,9 +27,16 @@ func sendResponseMetric(w http.ResponseWriter, metric metrics.Metrics) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
+	var field zap.Field
+	if metric.MType == metrics.Gauge {
+		field = zap.Float64("value", *metric.Value)
+	} else if metric.MType == metrics.Counter {
+		field = zap.Int64("delta", *metric.Delta)
+	}
+
 	logger.Log.Info("metric updated",
 		zap.String("type", metric.MType),
 		zap.String("id", metric.ID),
-		zap.Float64("value", *metric.Value),
+		field,
 	)
 }

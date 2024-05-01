@@ -1,8 +1,10 @@
 package test
 
 import (
+	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
+	"github.com/mylastgame/yp-metrics-service/internal/core/test"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"github.com/mylastgame/yp-metrics-service/internal/service/html"
@@ -51,7 +53,8 @@ func TestGetHandler(t *testing.T) {
 
 func setup() (chi.Router, string) {
 	repo := storage.NewMemRepo()
-	r := app.NewRouter(repo)
+	fileStorage := test.NewMockFileStorage(repo)
+	r := app.NewRouter(repo, fileStorage)
 
 	repo.Set("gauge", "g1", "0.00001")
 	repo.Set("gauge", "g2", "1")
@@ -61,14 +64,15 @@ func setup() (chi.Router, string) {
 	repo.Set("counter", "c3", "99")
 
 	gaugeHTML := "Gauges: <ol>"
-	for _, g := range repo.GetGauges() {
-		gaugeHTML += html.Tag("li", g)
+	//html.SliceToOlLi("Gauges", gauges)
+	for k, g := range repo.GetGauges() {
+		gaugeHTML += html.Tag("li", fmt.Sprintf("%s: %f", k, g))
 	}
 	gaugeHTML += "</ol>"
 
 	counterHTML := "Counters: <ol>"
-	for _, c := range repo.GetCounters() {
-		counterHTML += html.Tag("li", c)
+	for k, c := range repo.GetCounters() {
+		counterHTML += html.Tag("li", fmt.Sprintf("%s: %d", k, c))
 	}
 	counterHTML += "</ol>"
 

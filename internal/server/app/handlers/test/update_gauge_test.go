@@ -3,6 +3,7 @@ package test
 import (
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
+	"github.com/mylastgame/yp-metrics-service/internal/core/test"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"github.com/stretchr/testify/assert"
@@ -30,7 +31,8 @@ func TestHandler_UpdateGaugeHandler(t *testing.T) {
 	}
 
 	repo := storage.NewMemRepo()
-	r := app.NewRouter(repo)
+	fileStorage := test.NewMockFileStorage(repo)
+	r := app.NewRouter(repo, fileStorage)
 
 	logger.Initialize("info")
 	ts := httptest.NewServer(r)

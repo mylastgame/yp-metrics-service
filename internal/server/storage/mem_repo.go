@@ -123,26 +123,65 @@ func (r *MemRepo) GetGauge(k string) (float64, bool) {
 	}
 }
 
-func (r *MemRepo) GetCounters() []string {
+func (r *MemRepo) GetGauges() map[string]float64 {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	res := make([]string, 0)
-	for _, v := range r.counter {
-		res = append(res, convert.CounterToString(v))
+	res := make(map[string]float64, 0)
+	for k, v := range r.gauge {
+		res[k] = v
 	}
 
 	return res
 }
 
-func (r *MemRepo) GetGauges() []string {
+func (r *MemRepo) GetCounters() map[string]int64 {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	res := make([]string, 0)
-	for _, v := range r.gauge {
-		res = append(res, convert.GaugeToString(v))
+	res := make(map[string]int64, 0)
+	for k, v := range r.counter {
+		res[k] = v
 	}
 
 	return res
+}
+
+func (r *MemRepo) SaveMetric(metric metrics.Metrics) error {
+	if metric.MType == metrics.Gauge {
+		r.SetGauge(metric.ID, *metric.Value)
+		return nil
+	}
+
+	if metric.MType == metrics.Counter {
+		r.SetCounter(metric.ID, *metric.Delta)
+		return nil
+	}
+
+	return NewStorageError(BadMetricType, metric.MType, metric.ID)
+}
+
+func (r *MemRepo) GetMetric(mType string, id string) (metrics.Metrics, bool) {
+	metric := metrics.Metrics{}
+	if mType == metrics.Gauge {
+		val, ok := r.GetGauge(id)
+		if ok {
+			metric.MType = mType
+			metric.ID = id
+			metric.Value = &val
+		}
+		return metric, ok
+	}
+
+	if mType == metrics.Counter {
+		val, ok := r.GetCounter(id)
+		if ok {
+			metric.MType = mType
+			metric.ID = id
+			metric.Delta = &val
+		}
+		return metric, ok
+	}
+
+	return metric, false
 }

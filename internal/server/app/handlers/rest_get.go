@@ -18,40 +18,22 @@ func (h *Handler) RestGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if metric.MType == metrics.Gauge {
-		if metric.ID == "" {
-			logger.Log.Info("empty ID for gauge metric")
-			http.Error(w, "empty ID for gauge metric", http.StatusNotFound)
-			return
-		}
-		val, ok := h.repo.GetGauge(metric.ID)
-		if !ok {
-			logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
-			http.Error(w, "metric not found", http.StatusNotFound)
-			return
-		}
-		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Value: &val})
+	if metric.MType != metrics.Counter && metric.MType != metrics.Gauge {
+		logger.Log.Info("bad metric type", zap.String("type", metric.MType))
+		http.Error(w, "bad metric type", http.StatusBadRequest)
+	}
+
+	if metric.ID == "" {
+		logger.Log.Info("empty ID for gauge metric")
+		http.Error(w, "empty ID for gauge metric", http.StatusNotFound)
 		return
 	}
 
-	if metric.MType == metrics.Counter {
-		if metric.ID == "" {
-			logger.Log.Info("empty ID for counter metric")
-			http.Error(w, "empty ID for counter metric", http.StatusNotFound)
-			return
-		}
-
-		val, ok := h.repo.GetCounter(metric.ID)
-		if !ok {
-			logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
-			http.Error(w, "metric not found", http.StatusNotFound)
-			return
-		}
-		//sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Value: &val})
-		sendResponseMetric(w, metrics.Metrics{ID: metric.ID, MType: metric.MType, Delta: &val})
+	respMetric, ok := h.repo.GetMetric(metric.MType, metric.ID)
+	if !ok {
+		logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
+		http.Error(w, "metric not found", http.StatusNotFound)
 		return
 	}
-
-	logger.Log.Info("bad metric type", zap.String("type", metric.MType))
-	http.Error(w, "bad metric type", http.StatusBadRequest)
+	sendResponseMetric(w, respMetric)
 }

@@ -7,9 +7,9 @@ import (
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 )
 
-func NewRouter(repo storage.Repo) chi.Router {
+func NewRouter(repo storage.Repo, f storage.PersistentStorage) chi.Router {
 	r := chi.NewRouter()
-	h := handlers.NewHandler(repo)
+	h := handlers.NewHandler(repo, f)
 
 	//r.Route("/update", func(r chi.Router) {
 	//	r.Route("/gauge", func(r chi.Router) {

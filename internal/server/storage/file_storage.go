@@ -86,7 +86,7 @@ func (s *FileStorage) Restore() error {
 	scanner := bufio.NewScanner(file)
 
 	// одиночное сканирование до следующей строки
-	for scanner.Scan() == true {
+	for scanner.Scan() {
 		data := scanner.Bytes()
 		metric := metrics.Metrics{}
 

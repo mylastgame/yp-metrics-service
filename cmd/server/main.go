@@ -44,14 +44,11 @@ func main() {
 		//run store to file go-routine
 		go func() {
 			storeTicker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-			for {
-				select {
-				case <-storeTicker.C:
-					err := fileStorage.Save()
-					if err != nil {
-						logger.Sugar.Errorf("Error saving file: %v", err)
-						return
-					}
+			for range storeTicker.C {
+				err := fileStorage.Save()
+				if err != nil {
+					logger.Sugar.Errorf("Error saving file: %v", err)
+					return
 				}
 			}
 		}()

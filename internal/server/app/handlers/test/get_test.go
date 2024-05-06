@@ -2,6 +2,7 @@ package test
 
 import (
 	"github.com/go-chi/chi/v5"
+	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"github.com/mylastgame/yp-metrics-service/internal/service/html"
@@ -13,6 +14,7 @@ import (
 
 func TestGetHandler(t *testing.T) {
 	r, _ := setup()
+	logger.Initialize("info")
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 

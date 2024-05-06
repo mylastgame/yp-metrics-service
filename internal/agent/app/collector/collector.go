@@ -11,7 +11,7 @@ const (
 	BuckHashSys   = "BuckHashSys"
 	Frees         = "Frees"
 	GCCPUFraction = "GCCPUFraction"
-	GCSys         = "GCsys"
+	GCSys         = "GCSys"
 	HeapAlloc     = "HeapAlloc"
 	HeapIdle      = "HeapIdle"
 	HeapInuse     = "HeapInuse"

@@ -46,13 +46,17 @@ func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 			ResponseWriter: w, // встраиваем оригинальный http.ResponseWriter
 			responseData:   responseData,
 		}
-		h.ServeHTTP(&lw, r) // внедряем реализацию http.ResponseWriter
-
-		duration := time.Since(start)
 
 		logger.Log.Info("HTTP request",
 			zap.String("method", r.Method),
 			zap.String("uri", r.RequestURI),
+		)
+
+		h.ServeHTTP(&lw, r) // внедряем реализацию http.ResponseWriter
+
+		duration := time.Since(start)
+
+		logger.Log.Info("HTTP response",
 			zap.Int("status", responseData.status),
 			zap.Duration("duration", duration),
 			zap.Int("size", responseData.size),

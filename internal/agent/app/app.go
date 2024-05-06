@@ -1,11 +1,11 @@
 package app
 
 import (
-	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/collector"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/sender"
-	"github.com/mylastgame/yp-metrics-service/internal/agent/metric"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/storage"
+	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
+	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 )
 
 type app struct {
@@ -24,7 +24,7 @@ func New(storage storage.Storage, sender sender.Sender, collector *collector.Col
 
 func (a *app) Collect() {
 	a.collector.Collect()
-	fmt.Println("Collect finished")
+	logger.Log.Info("Collect finished")
 }
 
 func (a *app) Send() {
@@ -32,20 +32,19 @@ func (a *app) Send() {
 	counters := a.storage.GetCounters()
 
 	for t, v := range gauges {
-		err := a.sender.Send(metric.Metric{Mtype: "gauge", Title: t, Val: fmt.Sprintf("%f", v)})
+		err := a.sender.Send(metrics.Metrics{MType: metrics.Gauge, ID: t, Value: &v})
 		if err != nil {
-			fmt.Println(err.Error())
+			logger.Log.Error(err.Error())
 		}
 	}
 
 	for t, v := range counters {
-		err := a.sender.Send(metric.Metric{Mtype: "counter", Title: t, Val: fmt.Sprintf("%d", v)})
+		err := a.sender.Send(metrics.Metrics{MType: metrics.Counter, ID: t, Delta: &v})
 		if err != nil {
-			fmt.Println(err.Error())
+			logger.Log.Error(err.Error())
 		}
 	}
 
-	fmt.Println("Sending finished")
-
+	logger.Log.Info("Sending finished")
 	a.storage.ResetCounters()
 }

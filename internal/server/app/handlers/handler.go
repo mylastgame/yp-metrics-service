@@ -10,11 +10,12 @@ import (
 )
 
 type Handler struct {
-	repo storage.Repo
+	repo        storage.Repo
+	fileStorage storage.PersistentStorage
 }
 
-func NewHandler(r storage.Repo) *Handler {
-	return &Handler{repo: r}
+func NewHandler(r storage.Repo, f storage.PersistentStorage) *Handler {
+	return &Handler{repo: r, fileStorage: f}
 }
 
 func sendResponseMetric(w http.ResponseWriter, metric metrics.Metrics) {

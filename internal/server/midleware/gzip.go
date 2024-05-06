@@ -2,7 +2,6 @@ package midleware
 
 import (
 	"compress/gzip"
-	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"io"
 	"net/http"
 	"strings"
@@ -94,7 +93,6 @@ func GzipMiddleware(h http.HandlerFunc) http.HandlerFunc {
 		contentEncoding := r.Header.Get("Content-Encoding")
 		sendsGzip := strings.Contains(contentEncoding, "gzip")
 		if sendsGzip {
-			logger.Log.Info("Request compressed")
 			// оборачиваем тело запроса в io.Reader с поддержкой декомпрессии
 			cr, err := newCompressReader(r.Body)
 			if err != nil {

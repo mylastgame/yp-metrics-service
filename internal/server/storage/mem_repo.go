@@ -88,13 +88,14 @@ func (r *MemRepo) SetCounter(k string, v int64) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	_, ok := r.counter[k]
-
-	if ok {
-		r.counter[k] += v
-	} else {
-		r.counter[k] = v
-	}
+	r.counter[k] += v
+	//_, ok := r.counter[k]
+	//
+	//if ok {
+	//	r.counter[k] += v
+	//} else {
+	//	r.counter[k] = v
+	//}
 }
 
 func (r *MemRepo) GetCounter(k string) (int64, bool) {

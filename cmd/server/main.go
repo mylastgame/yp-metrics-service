@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
@@ -14,14 +15,14 @@ func main() {
 	//config init
 	err = config.ParseFlags()
 	if err != nil {
-		logger.Sugar.Errorf("Error parsing flags: %v", err)
+		fmt.Printf("Error parsing flags: %v/n", err)
 		panic(err)
 	}
 
 	//logger init
-	err = logger.Initialize(config.LogLevel)
+	log, err := logger.NewLogger(config.LogLevel)
 	if err != nil {
-		logger.Sugar.Errorf("Error init logger: %v", err)
+		fmt.Printf("Error init logger: %v/n", err)
 		panic(err)
 	}
 
@@ -29,13 +30,13 @@ func main() {
 	repo := storage.NewMemRepo()
 
 	//init file storage
-	fileStorage := storage.NewFileStorage(repo)
+	fileStorage := storage.NewFileStorage(repo, log)
 
 	//restore from file
 	if config.Restore {
 		err = fileStorage.Restore()
 		if err != nil {
-			logger.Sugar.Errorf("Error restoring data: %v", err)
+			log.Sugar.Errorf("Error restoring data: %v", err)
 			panic(err)
 		}
 	}
@@ -47,16 +48,16 @@ func main() {
 			for range storeTicker.C {
 				err := fileStorage.Save()
 				if err != nil {
-					logger.Sugar.Errorf("Error saving file: %v", err)
+					log.Sugar.Errorf("Error saving file: %v", err)
 					return
 				}
 			}
 		}()
 	}
 
-	r := app.NewRouter(repo, fileStorage)
-	logger.Sugar.Infof("Starting server. Listening on %s", config.RunAddr)
-	logger.Sugar.Infof("Store file: %s, interval: %d, restore: %t",
+	r := app.NewRouter(repo, fileStorage, log)
+	log.Sugar.Infof("Starting server. Listening on %s", config.RunAddr)
+	log.Sugar.Infof("Store file: %s, interval: %d, restore: %t",
 		config.FileStoragePath,
 		config.StoreInterval,
 		config.Restore,
@@ -64,7 +65,7 @@ func main() {
 	err = http.ListenAndServe(config.RunAddr, r)
 
 	if err != nil {
-		logger.Sugar.Errorf("Error starting server: %v", err)
+		log.Sugar.Errorf("Error starting server: %v", err)
 		panic(err)
 	}
 }

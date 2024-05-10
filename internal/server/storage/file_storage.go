@@ -16,26 +16,28 @@ type PersistentStorage interface {
 }
 
 type FileStorage struct {
-	repo Repo
-	m    *sync.Mutex
+	repo   Repo
+	m      *sync.Mutex
+	logger *logger.Logger
 }
 
-func NewFileStorage(repo Repo) *FileStorage {
+func NewFileStorage(repo Repo, log *logger.Logger) *FileStorage {
 	return &FileStorage{
-		repo: repo,
-		m:    &sync.Mutex{},
+		repo:   repo,
+		m:      &sync.Mutex{},
+		logger: log,
 	}
 }
 
 func (s *FileStorage) Save() error {
-	logger.Sugar.Info("Saving file to storage")
+	s.logger.Sugar.Info("Saving file to storage")
 	file, err := os.OpenFile(config.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
-	s.m.Lock()
+	//s.m.Lock()
 	defer func() {
-		s.m.Unlock()
+		//s.m.Unlock()
 		err := file.Close()
 		if err != nil {
-			logger.Log.Error(err.Error())
+			s.logger.Log.Error(err.Error())
 		}
 	}()
 
@@ -50,7 +52,7 @@ func (s *FileStorage) Save() error {
 	for k, v := range gauges {
 		err = enc.Encode(metrics.Metrics{MType: metrics.Gauge, ID: k, Value: &v})
 		if err != nil {
-			logger.Log.Error(err.Error())
+			s.logger.Log.Error(err.Error())
 			return err
 		}
 	}
@@ -59,7 +61,7 @@ func (s *FileStorage) Save() error {
 	for k, v := range counters {
 		err = enc.Encode(metrics.Metrics{MType: metrics.Counter, ID: k, Delta: &v})
 		if err != nil {
-			logger.Log.Error(err.Error())
+			s.logger.Log.Error(err.Error())
 			return err
 		}
 	}
@@ -68,14 +70,12 @@ func (s *FileStorage) Save() error {
 }
 
 func (s *FileStorage) Restore() error {
-	logger.Sugar.Info("Restoring data to repository from file")
-	s.m.Lock()
+	s.logger.Sugar.Info("Restoring data to repository from file")
 	file, err := os.OpenFile(config.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	defer func() {
-		s.m.Unlock()
 		err := file.Close()
 		if err != nil {
-			logger.Log.Error(err.Error())
+			s.logger.Log.Error(err.Error())
 		}
 	}()
 
@@ -92,13 +92,13 @@ func (s *FileStorage) Restore() error {
 
 		err = json.Unmarshal(data, &metric)
 		if err != nil {
-			logger.Log.Error(err.Error())
+			s.logger.Log.Error(err.Error())
 			return err
 		}
 
 		err = s.repo.SaveMetric(metric)
 		if err != nil {
-			logger.Log.Error(err.Error())
+			s.logger.Log.Error(err.Error())
 			return err
 		}
 	}

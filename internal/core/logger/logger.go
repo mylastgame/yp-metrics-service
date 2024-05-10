@@ -6,11 +6,24 @@ import (
 
 // Log будет доступен всему коду как синглтон.
 // var Log *zap.Logger = zap.NewNop()
-var Log *zap.Logger
-var Sugar *zap.SugaredLogger
+var log *zap.Logger
+var sugar *zap.SugaredLogger
 
-// Initialize инициализирует синглтон логера с необходимым уровнем логирования.
-func Initialize(level string) error {
+type Logger struct {
+	Log   *zap.Logger
+	Sugar *zap.SugaredLogger
+}
+
+func NewLogger(level string) (*Logger, error) {
+	err := initialize(level)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Logger{Log: log, Sugar: sugar}, nil
+}
+
+func initialize(level string) error {
 	// преобразуем текстовый уровень логирования в zap.AtomicLevel
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
@@ -28,7 +41,7 @@ func Initialize(level string) error {
 		return err
 	}
 	// устанавливаем синглтон
-	Log = zl
-	Sugar = Log.Sugar()
+	log = zl
+	sugar = log.Sugar()
 	return nil
 }

@@ -12,19 +12,20 @@ import (
 type Handler struct {
 	repo        storage.Repo
 	fileStorage storage.PersistentStorage
+	logger      *logger.Logger
 }
 
-func NewHandler(r storage.Repo, f storage.PersistentStorage) *Handler {
-	return &Handler{repo: r, fileStorage: f}
+func NewHandler(r storage.Repo, f storage.PersistentStorage, l *logger.Logger) *Handler {
+	return &Handler{repo: r, fileStorage: f, logger: l}
 }
 
-func sendResponseMetric(w http.ResponseWriter, metric metrics.Metrics) {
+func (h *Handler) sendResponseMetric(w http.ResponseWriter, metric metrics.Metrics) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	enc := json.NewEncoder(w)
 	err := enc.Encode(metric)
 	if err != nil {
-		logger.Log.Error("encoding response error", zap.Error(err))
+		h.logger.Log.Error("encoding response error", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -35,7 +36,7 @@ func sendResponseMetric(w http.ResponseWriter, metric metrics.Metrics) {
 		field = zap.Int64("delta", *metric.Delta)
 	}
 
-	logger.Log.Info("metric updated",
+	h.logger.Log.Info("metric updated",
 		zap.String("type", metric.MType),
 		zap.String("id", metric.ID),
 		field,

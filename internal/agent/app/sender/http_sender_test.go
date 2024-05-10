@@ -1,6 +1,7 @@
 package sender
 
 import (
+	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/core/test"
@@ -40,11 +41,15 @@ func Test_httpSender_Send(t *testing.T) {
 		},
 	}
 
+	log, err := logger.NewLogger("info")
+	if err != nil {
+		fmt.Printf("Error init logger: %v/n", err)
+		panic(err)
+	}
 	repo := storage.NewMemRepo()
 	fileStorage := test.NewMockFileStorage(repo)
-	r := app.NewRouter(repo, fileStorage)
+	r := app.NewRouter(repo, fileStorage, log)
 
-	logger.Initialize("info")
 	s := httptest.NewServer(r)
 	defer s.Close()
 

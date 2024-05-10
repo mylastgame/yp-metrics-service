@@ -18,16 +18,18 @@ func main() {
 		panic(err)
 	}
 
-	err = logger.Initialize("info")
+	//logger init
+	log, err := logger.NewLogger("info")
 	if err != nil {
+		fmt.Printf("Error init logger: %v/n", err)
 		panic(err)
 	}
 
 	//Sender := sender.NewHTTPSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "update")
-	Sender := sender.NewRESTSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "update")
+	Sender := sender.NewRESTSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "update", log)
 	Storage := storage.NewMemStorage()
-	App := app.New(Storage, Sender, collector.New(Storage))
-	logger.Log.Sugar().Infof("Agent started. Poll interval: %ds, report interval: %ds, endpoint: %s",
+	App := app.New(Storage, Sender, collector.New(Storage), log)
+	log.Log.Sugar().Infof("Agent started. Poll interval: %ds, report interval: %ds, endpoint: %s",
 		cfg.PollInterval, cfg.ReportInterval, cfg.EndpointAddr)
 
 	pollTicker := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)

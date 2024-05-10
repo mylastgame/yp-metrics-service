@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
 	"go.uber.org/zap"
@@ -21,7 +20,7 @@ func (h *Handler) UpdateHandler(w http.ResponseWriter, r *http.Request) {
 				//save data to file
 				err = h.fileStorage.Save()
 				if err != nil {
-					logger.Log.Error("Saving to file error", zap.Error(err))
+					h.logger.Log.Error("Saving to file error", zap.Error(err))
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}

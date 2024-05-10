@@ -16,16 +16,17 @@ type RESTSender struct {
 	endpoint string
 	method   string
 	path     string
+	logger   *logger.Logger
 }
 
-func NewRESTSender(e, m, p string) *RESTSender {
-	return &RESTSender{endpoint: e, method: m, path: p}
+func NewRESTSender(e, m, p string, log *logger.Logger) *RESTSender {
+	return &RESTSender{endpoint: e, method: m, path: p, logger: log}
 }
 
 func (s *RESTSender) Send(m metrics.Metrics) error {
 	body, err := json.Marshal(m)
 	if err != nil {
-		logger.Log.Error("marshal metrics error: " + err.Error())
+		s.logger.Log.Error("marshal metrics error: " + err.Error())
 		return err
 	}
 
@@ -52,12 +53,12 @@ func (s *RESTSender) Send(m metrics.Metrics) error {
 		Post(req)
 
 	if err != nil {
-		logger.Log.Error("error sending metrics request: " + err.Error())
+		s.logger.Log.Error("error sending metrics request: " + err.Error())
 		return err
 	}
 
 	if res.StatusCode() != http.StatusOK {
-		logger.Log.Error("bad status on request: " + res.Status())
+		s.logger.Log.Error("bad status on request: " + res.Status())
 		return fmt.Errorf("response status code: %d, for url: %s", res.StatusCode(), req)
 	}
 

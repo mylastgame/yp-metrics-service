@@ -34,7 +34,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode // захватываем код статуса
 }
 
-func WithLogging(h http.HandlerFunc) http.HandlerFunc {
+func WithLogging(h http.HandlerFunc, log *logger.Logger) http.HandlerFunc {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
@@ -47,7 +47,7 @@ func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 			responseData:   responseData,
 		}
 
-		logger.Log.Info("HTTP request",
+		log.Log.Info("HTTP request",
 			zap.String("method", r.Method),
 			zap.String("uri", r.RequestURI),
 		)
@@ -56,7 +56,7 @@ func WithLogging(h http.HandlerFunc) http.HandlerFunc {
 
 		duration := time.Since(start)
 
-		logger.Log.Info("HTTP response",
+		log.Log.Info("HTTP response",
 			zap.Int("status", responseData.status),
 			zap.Duration("duration", duration),
 			zap.Int("size", responseData.size),

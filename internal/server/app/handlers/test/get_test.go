@@ -16,7 +16,6 @@ import (
 
 func TestGetHandler(t *testing.T) {
 	r, _ := setup()
-	logger.Initialize("info")
 	ts := httptest.NewServer(r)
 	defer ts.Close()
 
@@ -52,9 +51,14 @@ func TestGetHandler(t *testing.T) {
 }
 
 func setup() (chi.Router, string) {
+	log, err := logger.NewLogger("info")
+	if err != nil {
+		fmt.Printf("Error init logger: %v/n", err)
+		panic(err)
+	}
 	repo := storage.NewMemRepo()
 	fileStorage := test.NewMockFileStorage(repo)
-	r := app.NewRouter(repo, fileStorage)
+	r := app.NewRouter(repo, fileStorage, log)
 
 	repo.Set("gauge", "g1", "0.00001")
 	repo.Set("gauge", "g2", "1")

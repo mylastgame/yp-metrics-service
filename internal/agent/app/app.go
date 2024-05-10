@@ -12,19 +12,21 @@ type app struct {
 	storage   storage.Storage
 	sender    sender.Sender
 	collector *collector.Collector
+	logger    *logger.Logger
 }
 
-func New(storage storage.Storage, sender sender.Sender, collector *collector.Collector) *app {
+func New(storage storage.Storage, sender sender.Sender, collector *collector.Collector, log *logger.Logger) *app {
 	return &app{
 		storage:   storage,
 		sender:    sender,
 		collector: collector,
+		logger:    log,
 	}
 }
 
 func (a *app) Collect() {
 	a.collector.Collect()
-	logger.Log.Info("Collect finished")
+	a.logger.Log.Info("Collect finished")
 }
 
 func (a *app) Send() {
@@ -34,17 +36,17 @@ func (a *app) Send() {
 	for t, v := range gauges {
 		err := a.sender.Send(metrics.Metrics{MType: metrics.Gauge, ID: t, Value: &v})
 		if err != nil {
-			logger.Log.Error(err.Error())
+			a.logger.Log.Error(err.Error())
 		}
 	}
 
 	for t, v := range counters {
 		err := a.sender.Send(metrics.Metrics{MType: metrics.Counter, ID: t, Delta: &v})
 		if err != nil {
-			logger.Log.Error(err.Error())
+			a.logger.Log.Error(err.Error())
 		}
 	}
 
-	logger.Log.Info("Sending finished")
+	a.logger.Log.Info("Sending finished")
 	a.storage.ResetCounters()
 }

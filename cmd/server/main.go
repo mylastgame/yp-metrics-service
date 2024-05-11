@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
@@ -41,18 +42,26 @@ func main() {
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	if config.StoreInterval != 0 {
 		//run store to file go-routine
-		go func() {
+		go func(ctx context.Context) {
 			storeTicker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-			for range storeTicker.C {
-				err := fileStorage.Save()
-				if err != nil {
-					log.Sugar.Errorf("Error saving file: %v", err)
+			for {
+				select {
+				case <-ctx.Done():
 					return
+				case <-storeTicker.C:
+					err := fileStorage.Save()
+					if err != nil {
+						log.Sugar.Errorf("Error saving file: %v", err)
+						return
+					}
 				}
+
 			}
-		}()
+		}(ctx)
 	}
 
 	r := app.NewRouter(repo, fileStorage, log)

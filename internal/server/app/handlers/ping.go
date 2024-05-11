@@ -2,28 +2,26 @@ package handlers
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/mylastgame/yp-metrics-service/internal/server/config"
 	"net/http"
 )
 
 func (h *Handler) PingHandler(w http.ResponseWriter, r *http.Request) {
-	ps := fmt.Sprintf("host=%s user=%s password=%s",
-		`localhost`, `developer`, `dev123`)
-
-	db, err := sql.Open("pgx", ps)
-	defer func() {
-		err = db.Close()
-		if err != nil {
-			h.logger.Sugar.Error("Error closing connect to database: " + err.Error())
-		}
-	}()
-
+	h.logger.Sugar.Infof("DB connecting data: %s", config.DBConnect)
+	db, err := sql.Open("pgx", config.DBConnect)
 	if err != nil {
 		h.logger.Sugar.Error("Error connecting to database: " + err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	defer func() {
+		err := db.Close()
+		if err != nil {
+			h.logger.Sugar.Error("Error closing connect to database: " + err.Error())
+		}
+	}()
 
 	w.WriteHeader(http.StatusOK)
 }

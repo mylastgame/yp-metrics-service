@@ -24,7 +24,7 @@ func ParseFlags() error {
 	flag.IntVar(&StoreInterval, "i", 300, "store to file interval in seconds")
 	flag.StringVar(&FileStoragePath, "f", "/tmp/metrics-db.json", "path to storage file")
 	flag.BoolVar(&Restore, "r", true, "restore metrics from file")
-	flag.StringVar(&DBConnect, "d", "host=localhost11 user=developer password=dev12 dbname=yp_metrics sslmode=disable", "DB connection string")
+	flag.StringVar(&DBConnect, "d", "host=localhost user=developer password=dev123 dbname=yp_metrics sslmode=disable", "DB connection string")
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 

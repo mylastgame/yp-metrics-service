@@ -71,6 +71,8 @@ func main() {
 		config.StoreInterval,
 		config.Restore,
 	)
+	log.Sugar.Infof("DB connecting data: %s", config.DBConnect)
+
 	err = http.ListenAndServe(config.RunAddr, r)
 
 	if err != nil {

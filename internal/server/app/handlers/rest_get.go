@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
-	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -34,15 +33,15 @@ func (h *Handler) RestGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	respMetric, err := h.repo.GetMetric(ctx, metric.MType, metric.ID)
 	if err != nil {
-		if err == storage.ErrorNotExists {
-			h.logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
-			http.Error(w, "metric not found", http.StatusNotFound)
-			return
-		}
-
-		h.logger.Log.Error("error getting metric", zap.String("type", metric.MType), zap.String("id", metric.ID))
-		http.Error(w, "metric not found", http.StatusBadRequest)
+		//if err == storage.ErrorNotExists {
+		h.logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
+		http.Error(w, "metric not found", http.StatusNotFound)
 		return
+		//}
+
+		//h.logger.Log.Error("error getting metric", zap.String("type", metric.MType), zap.String("id", metric.ID))
+		//http.Error(w, "metric not found", http.StatusBadRequest)
+		//return
 	}
 
 	h.sendResponseMetric(w, respMetric)

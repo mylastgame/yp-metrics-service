@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
@@ -39,9 +40,13 @@ func TestHandler_UpdateGaugeHandler(t *testing.T) {
 	repo := storage.NewMemRepo()
 	fileStorage := test.NewMockFileStorage(repo)
 	r := app.NewRouter(repo, fileStorage, log)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	ts := httptest.NewServer(r)
-	defer ts.Close()
+	defer func() {
+		ts.Close()
+		cancel()
+	}()
 
 	for _, v := range testTable {
 		resp, _ := testRequest(t, ts, v.method, v.url)
@@ -51,7 +56,7 @@ func TestHandler_UpdateGaugeHandler(t *testing.T) {
 			continue
 		}
 
-		c, err := repo.Get(metrics.Gauge, "c1")
+		c, err := repo.Get(ctx, metrics.Gauge, "c1")
 
 		require.NoError(t, err, v.name)
 		assert.Equal(t, v.want, c, v.name)

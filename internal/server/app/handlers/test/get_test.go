@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
@@ -59,23 +60,32 @@ func setup() (chi.Router, string) {
 	repo := storage.NewMemRepo()
 	fileStorage := test.NewMockFileStorage(repo)
 	r := app.NewRouter(repo, fileStorage, log)
+	ctx := context.Background()
 
-	repo.Set("gauge", "g1", "0.00001")
-	repo.Set("gauge", "g2", "1")
-	repo.Set("gauge", "g3", "99.076511")
-	repo.Set("counter", "c1", "1")
-	repo.Set("counter", "c2", "1")
-	repo.Set("counter", "c3", "99")
+	repo.Set(ctx, "gauge", "g1", "0.00001")
+	repo.Set(ctx, "gauge", "g2", "1")
+	repo.Set(ctx, "gauge", "g3", "99.076511")
+	repo.Set(ctx, "counter", "c1", "1")
+	repo.Set(ctx, "counter", "c2", "1")
+	repo.Set(ctx, "counter", "c3", "99")
 
 	gaugeHTML := "Gauges: <ol>"
 	//html.SliceToOlLi("Gauges", gauges)
-	for k, g := range repo.GetGauges() {
+	gauges, err := repo.GetGauges(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for k, g := range gauges {
 		gaugeHTML += html.Tag("li", fmt.Sprintf("%s: %f", k, g))
 	}
 	gaugeHTML += "</ol>"
 
 	counterHTML := "Counters: <ol>"
-	for k, c := range repo.GetCounters() {
+	counters, err := repo.GetCounters(ctx)
+	if err != nil {
+		panic(err)
+	}
+	for k, c := range counters {
 		counterHTML += html.Tag("li", fmt.Sprintf("%s: %d", k, c))
 	}
 	counterHTML += "</ol>"

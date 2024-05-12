@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/service/convert"
 	"sync"
@@ -20,7 +21,7 @@ func NewMemRepo() *MemRepo {
 	}
 }
 
-func (r *MemRepo) Get(t string, k string) (string, error) {
+func (r *MemRepo) Get(ctx context.Context, t string, k string) (string, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
@@ -45,7 +46,7 @@ func (r *MemRepo) Get(t string, k string) (string, error) {
 	return "", NewStorageError(BadMetricType, t, k)
 }
 
-func (r *MemRepo) Set(t string, k string, v string) error {
+func (r *MemRepo) Set(ctx context.Context, t string, k string, v string) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 
@@ -78,13 +79,14 @@ func (r *MemRepo) Set(t string, k string, v string) error {
 	return NewStorageError(BadMetricType, t, k)
 }
 
-func (r *MemRepo) SetGauge(k string, v float64) {
+func (r *MemRepo) SetGauge(ctx context.Context, k string, v float64) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 	r.gauge[k] = v
+	return nil
 }
 
-func (r *MemRepo) SetCounter(k string, v int64) {
+func (r *MemRepo) SetCounter(ctx context.Context, k string, v int64) error {
 	r.m.Lock()
 	defer r.m.Unlock()
 
@@ -96,93 +98,105 @@ func (r *MemRepo) SetCounter(k string, v int64) {
 	//} else {
 	//	r.counter[k] = v
 	//}
+
+	return nil
 }
 
-func (r *MemRepo) GetCounter(k string) (int64, bool) {
+func (r *MemRepo) GetCounter(ctx context.Context, k string) (int64, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
 	v, ok := r.counter[k]
 
 	if ok {
-		return v, ok
+		return v, nil
 	} else {
-		return 0, ok
+		return 0, NewStorageError(KeyNotExists, metrics.Counter, k)
 	}
 }
 
-func (r *MemRepo) GetGauge(k string) (float64, bool) {
+func (r *MemRepo) GetGauge(ctx context.Context, k string) (float64, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
 	v, ok := r.gauge[k]
 
 	if ok {
-		return v, ok
+		return v, nil
 	} else {
-		return 0, ok
+		return 0, NewStorageError(KeyNotExists, metrics.Gauge, k)
 	}
 }
 
-func (r *MemRepo) GetGauges() map[string]float64 {
+func (r *MemRepo) GetGauges(ctx context.Context) (metrics.GaugeList, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	res := make(map[string]float64, 0)
+	res := metrics.GaugeList{}
 	for k, v := range r.gauge {
 		res[k] = v
 	}
 
-	return res
+	return res, nil
 }
 
-func (r *MemRepo) GetCounters() map[string]int64 {
+func (r *MemRepo) GetCounters(ctx context.Context) (metrics.CounterList, error) {
 	r.m.Lock()
 	defer r.m.Unlock()
 
-	res := make(map[string]int64, 0)
+	res := metrics.CounterList{}
 	for k, v := range r.counter {
 		res[k] = v
 	}
 
-	return res
+	return res, nil
 }
 
-func (r *MemRepo) SaveMetric(metric metrics.Metrics) error {
+func (r *MemRepo) SaveMetric(ctx context.Context, metric metrics.Metrics) error {
 	if metric.MType == metrics.Gauge {
-		r.SetGauge(metric.ID, *metric.Value)
+		r.SetGauge(ctx, metric.ID, *metric.Value)
 		return nil
 	}
 
 	if metric.MType == metrics.Counter {
-		r.SetCounter(metric.ID, *metric.Delta)
+		r.SetCounter(ctx, metric.ID, *metric.Delta)
 		return nil
 	}
 
 	return NewStorageError(BadMetricType, metric.MType, metric.ID)
 }
 
-func (r *MemRepo) GetMetric(mType string, id string) (metrics.Metrics, bool) {
+func (r *MemRepo) GetMetric(ctx context.Context, mType string, id string) (metrics.Metrics, error) {
 	metric := metrics.Metrics{}
+	var (
+		err  error
+		gVal float64
+		cVal int64
+	)
+
 	if mType == metrics.Gauge {
-		val, ok := r.GetGauge(id)
-		if ok {
+		gVal, err = r.GetGauge(ctx, id)
+		if err == nil {
 			metric.MType = mType
 			metric.ID = id
-			metric.Value = &val
+			metric.Value = &gVal
 		}
-		return metric, ok
+		return metric, err
 	}
 
 	if mType == metrics.Counter {
-		val, ok := r.GetCounter(id)
-		if ok {
+		cVal, err = r.GetCounter(ctx, id)
+		if err == nil {
 			metric.MType = mType
 			metric.ID = id
-			metric.Delta = &val
+			metric.Delta = &cVal
 		}
-		return metric, ok
+		return metric, err
 	}
 
-	return metric, false
+	return metric, NewStorageError(BadMetricType, metric.MType, metric.ID)
+}
+
+func (r *MemRepo) Ping() error {
+	return nil
 }

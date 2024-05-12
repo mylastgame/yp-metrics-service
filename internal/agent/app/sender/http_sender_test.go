@@ -1,6 +1,7 @@
 package sender
 
 import (
+	"context"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
@@ -51,7 +52,11 @@ func Test_httpSender_Send(t *testing.T) {
 	r := app.NewRouter(repo, fileStorage, log)
 
 	s := httptest.NewServer(r)
-	defer s.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		s.Close()
+		cancel()
+	}()
 
 	sender := httpSender{s.URL, http.MethodPost, "update"}
 
@@ -63,11 +68,11 @@ func Test_httpSender_Send(t *testing.T) {
 			}
 
 			if tt.m.MType == "counter" {
-				get, err := repo.Get(metrics.Counter, tt.m.ID)
+				get, err := repo.Get(ctx, metrics.Counter, tt.m.ID)
 				require.NoError(t, err, tt.name)
 				assert.Equal(t, tt.want, get, tt.name)
 			} else {
-				get, err := repo.Get(metrics.Gauge, tt.m.ID)
+				get, err := repo.Get(ctx, metrics.Gauge, tt.m.ID)
 				require.NoError(t, err, tt.name)
 				assert.Equal(t, tt.want, get, tt.name)
 			}

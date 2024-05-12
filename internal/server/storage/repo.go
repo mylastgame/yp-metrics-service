@@ -1,16 +1,20 @@
 package storage
 
-import "github.com/mylastgame/yp-metrics-service/internal/core/metrics"
+import (
+	"context"
+	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
+)
 
 type Repo interface {
-	Set(string, string, string) error
-	Get(string, string) (string, error)
-	SetGauge(string, float64)
-	SetCounter(string, int64)
-	GetGauge(string) (float64, bool)
-	GetCounter(string) (int64, bool)
-	GetGauges() map[string]float64
-	GetCounters() map[string]int64
-	SaveMetric(metrics.Metrics) error
-	GetMetric(string, string) (metrics.Metrics, bool)
+	Set(context.Context, string, string, string) error
+	Get(context.Context, string, string) (string, error)
+	SetGauge(context.Context, string, float64) error
+	SetCounter(context.Context, string, int64) error
+	GetGauge(context.Context, string) (float64, error)
+	GetCounter(context.Context, string) (int64, error)
+	GetGauges(context.Context) (metrics.GaugeList, error)
+	GetCounters(context.Context) (metrics.CounterList, error)
+	SaveMetric(context.Context, metrics.Metrics) error
+	GetMetric(context.Context, string, string) (metrics.Metrics, error)
+	Ping() error
 }

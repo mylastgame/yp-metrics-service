@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
@@ -41,7 +42,12 @@ func TestUpdateCounterHandler(t *testing.T) {
 	r := app.NewRouter(repo, fileStorage, log)
 
 	ts := httptest.NewServer(r)
-	defer ts.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer func() {
+		ts.Close()
+		cancel()
+	}()
 
 	for _, v := range testTable {
 		resp, _ := testRequest(t, ts, v.method, v.url)
@@ -52,7 +58,7 @@ func TestUpdateCounterHandler(t *testing.T) {
 			continue
 		}
 
-		c, err := repo.Get(metrics.Counter, "c1")
+		c, err := repo.Get(ctx, metrics.Counter, "c1")
 
 		require.NoError(t, err)
 		assert.Equal(t, v.want, c)

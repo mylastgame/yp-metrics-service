@@ -2,6 +2,7 @@ package storage
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
@@ -11,8 +12,8 @@ import (
 )
 
 type PersistentStorage interface {
-	Save() error
-	Restore() error
+	Save(context.Context) error
+	Restore(context.Context) error
 }
 
 type FileStorage struct {
@@ -29,8 +30,13 @@ func NewFileStorage(repo Repo, log *logger.Logger) *FileStorage {
 	}
 }
 
-func (s *FileStorage) Save() error {
+func (s *FileStorage) Save(ctx context.Context) error {
 	s.logger.Sugar.Info("Saving file to storage")
+	var (
+		err      error
+		gauges   metrics.GaugeList
+		counters metrics.CounterList
+	)
 	file, err := os.OpenFile(config.FileStoragePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	//s.m.Lock()
 	defer func() {
@@ -48,7 +54,10 @@ func (s *FileStorage) Save() error {
 	enc := json.NewEncoder(file)
 	enc.SetIndent("", "")
 
-	gauges := s.repo.GetGauges()
+	gauges, err = s.repo.GetGauges(ctx)
+	if err != nil && err != NotExistsError {
+		return err
+	}
 	for k, v := range gauges {
 		err = enc.Encode(metrics.Metrics{MType: metrics.Gauge, ID: k, Value: &v})
 		if err != nil {
@@ -57,7 +66,10 @@ func (s *FileStorage) Save() error {
 		}
 	}
 
-	counters := s.repo.GetCounters()
+	counters, err = s.repo.GetCounters(ctx)
+	if err != nil && err != NotExistsError {
+		return err
+	}
 	for k, v := range counters {
 		err = enc.Encode(metrics.Metrics{MType: metrics.Counter, ID: k, Delta: &v})
 		if err != nil {
@@ -69,7 +81,7 @@ func (s *FileStorage) Save() error {
 	return nil
 }
 
-func (s *FileStorage) Restore() error {
+func (s *FileStorage) Restore(ctx context.Context) error {
 	s.logger.Sugar.Info("Restoring data to repository from file")
 	file, err := os.OpenFile(config.FileStoragePath, os.O_RDONLY|os.O_CREATE, 0666)
 	defer func() {
@@ -96,7 +108,7 @@ func (s *FileStorage) Restore() error {
 			return err
 		}
 
-		err = s.repo.SaveMetric(metric)
+		err = s.repo.SaveMetric(ctx, metric)
 		if err != nil {
 			s.logger.Log.Error(err.Error())
 			return err

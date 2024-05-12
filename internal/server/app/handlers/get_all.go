@@ -17,14 +17,14 @@ func (h *Handler) GetAllHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	gauges, err = h.repo.GetGauges(ctx)
-	if err != nil && err != storage.NotExistsError {
+	if err != nil && err != storage.ErrorNotExists {
 		h.logger.Sugar.Errorf("GetAllHandler: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	counters, err = h.repo.GetCounters(ctx)
-	if err != nil && err != storage.NotExistsError {
+	if err != nil && err != storage.ErrorNotExists {
 		h.logger.Sugar.Errorf("GetAllHandler: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return

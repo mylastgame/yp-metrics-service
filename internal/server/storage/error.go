@@ -16,7 +16,7 @@ type StorageError struct {
 	Msg  string
 }
 
-var NotExistsError = errors.New("value not exists")
+var ErrorNotExists = errors.New("value not exists")
 
 func NewStorageError(code int, t string, k string) *StorageError {
 	return &StorageError{Code: code, Msg: createMessage(code, t, k)}

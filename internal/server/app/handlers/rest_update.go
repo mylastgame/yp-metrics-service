@@ -45,7 +45,7 @@ func (h *Handler) RestUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
 	respMetric, err := h.repo.GetMetric(ctx, metric.MType, metric.ID)
 	if err != nil {
-		if err == storage.NotExistsError {
+		if err == storage.ErrorNotExists {
 			h.logger.Log.Error("error when getting updated metric", zap.Error(err))
 			http.Error(w, "error when getting updated metric", http.StatusInternalServerError)
 			return

@@ -34,7 +34,7 @@ func (h *Handler) RestGetHandler(w http.ResponseWriter, r *http.Request) {
 
 	respMetric, err := h.repo.GetMetric(ctx, metric.MType, metric.ID)
 	if err != nil {
-		if err == storage.NotExistsError {
+		if err == storage.ErrorNotExists {
 			h.logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))
 			http.Error(w, "metric not found", http.StatusNotFound)
 			return

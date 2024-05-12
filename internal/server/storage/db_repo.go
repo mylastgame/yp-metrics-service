@@ -81,7 +81,7 @@ func (r *DBRepo) Get(ctx context.Context, t string, k string) (string, error) {
 	if t == metrics.Gauge {
 		val, err := r.GetGauge(ctx, k)
 		if err != nil {
-			if err != NotExistsError {
+			if err != ErrorNotExists {
 				return "", fmt.Errorf("error getting metrics: %v", err)
 			}
 
@@ -94,7 +94,7 @@ func (r *DBRepo) Get(ctx context.Context, t string, k string) (string, error) {
 	if t == metrics.Counter {
 		val, err := r.GetCounter(ctx, k)
 		if err != nil {
-			if err != NotExistsError {
+			if err != ErrorNotExists {
 				return "", fmt.Errorf("error getting metrics: %v", err)
 			}
 
@@ -141,9 +141,9 @@ func (r *DBRepo) SetGauge(ctx context.Context, id string, v float64) error {
 		metrics.Gauge, id,
 	)
 
-	var existedId string
+	var existedID string
 
-	err = row.Scan(&existedId)
+	err = row.Scan(&existedID)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			_ = tx.Rollback()
@@ -181,9 +181,9 @@ func (r *DBRepo) SetCounter(ctx context.Context, id string, v int64) error {
 		metrics.Counter, id,
 	)
 
-	var existedId string
+	var existedID string
 
-	err = row.Scan(&existedId)
+	err = row.Scan(&existedID)
 	if err != nil {
 		if err != sql.ErrNoRows {
 			_ = tx.Rollback()
@@ -218,7 +218,7 @@ func (r *DBRepo) GetCounter(ctx context.Context, id string) (int64, error) {
 			return 0, fmt.Errorf("error scanning metrics: %v", err)
 		}
 
-		return 0, NotExistsError
+		return 0, ErrorNotExists
 	}
 
 	return counter, nil
@@ -233,7 +233,7 @@ func (r *DBRepo) GetGauge(ctx context.Context, id string) (float64, error) {
 			return 0, fmt.Errorf("error scanning metrics: %v", err)
 		}
 
-		return 0, NotExistsError
+		return 0, ErrorNotExists
 	}
 
 	return gauge, nil
@@ -242,12 +242,14 @@ func (r *DBRepo) GetGauge(ctx context.Context, id string) (float64, error) {
 func (r *DBRepo) GetGauges(ctx context.Context) (metrics.GaugeList, error) {
 	res := metrics.GaugeList{}
 	rows, err := r.conn.QueryContext(ctx, "SELECT id, value FROM metrics WHERE type = $1", metrics.Gauge)
+	defer rows.Close()
+
 	if err != nil {
 		if err != sql.ErrNoRows {
-			return res, fmt.Errorf("error scanning metrics: %v", err)
+			return nil, fmt.Errorf("error scanning metrics: %v", err)
 		}
 
-		return res, NotExistsError
+		return res, ErrorNotExists
 	}
 
 	var (
@@ -257,10 +259,15 @@ func (r *DBRepo) GetGauges(ctx context.Context) (metrics.GaugeList, error) {
 	for rows.Next() {
 		err = rows.Scan(&id, &value)
 		if err != nil {
-			return res, fmt.Errorf("error scanning metrics: %v", err)
+			return nil, fmt.Errorf("error scanning metrics: %v", err)
 		}
 
 		res[id] = value
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil
@@ -269,12 +276,14 @@ func (r *DBRepo) GetGauges(ctx context.Context) (metrics.GaugeList, error) {
 func (r *DBRepo) GetCounters(ctx context.Context) (metrics.CounterList, error) {
 	res := metrics.CounterList{}
 	rows, err := r.conn.QueryContext(ctx, "SELECT id, delta FROM metrics WHERE type = $1", metrics.Counter)
+	defer rows.Close()
+
 	if err != nil {
 		if err != sql.ErrNoRows {
-			return res, fmt.Errorf("error scanning metrics: %v", err)
+			return nil, fmt.Errorf("error scanning metrics: %v", err)
 		}
 
-		return res, NotExistsError
+		return res, ErrorNotExists
 	}
 
 	var (
@@ -284,10 +293,15 @@ func (r *DBRepo) GetCounters(ctx context.Context) (metrics.CounterList, error) {
 	for rows.Next() {
 		err = rows.Scan(&id, &value)
 		if err != nil {
-			return res, fmt.Errorf("error scanning metrics: %v", err)
+			return nil, fmt.Errorf("error scanning metrics: %v", err)
 		}
 
 		res[id] = value
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil

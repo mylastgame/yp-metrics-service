@@ -55,7 +55,7 @@ func (s *FileStorage) Save(ctx context.Context) error {
 	enc.SetIndent("", "")
 
 	gauges, err = s.repo.GetGauges(ctx)
-	if err != nil && err != NotExistsError {
+	if err != nil && err != ErrorNotExists {
 		return err
 	}
 	for k, v := range gauges {
@@ -67,7 +67,7 @@ func (s *FileStorage) Save(ctx context.Context) error {
 	}
 
 	counters, err = s.repo.GetCounters(ctx)
-	if err != nil && err != NotExistsError {
+	if err != nil && err != ErrorNotExists {
 		return err
 	}
 	for k, v := range counters {

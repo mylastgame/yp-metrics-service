@@ -39,11 +39,11 @@ func main() {
 	} else {
 		var db *sql.DB
 		db, err = sql.Open("pgx", config.DBConnect)
-		defer db.Close()
 		if err != nil {
 			log.Sugar.Errorf("Error connecting to database: %v", err)
 			panic(err)
 		}
+		defer db.Close()
 
 		//create DB repo
 		err = core.Retry("init DB repo", 3, func() error {

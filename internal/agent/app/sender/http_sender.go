@@ -50,3 +50,7 @@ func (s *httpSender) Send(m metrics.Metrics) error {
 
 	return nil
 }
+
+func (s *httpSender) SendBatch(metrics []metrics.Metrics) error {
+	return fmt.Errorf("not implemented")
+}

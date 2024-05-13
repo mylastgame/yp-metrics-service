@@ -358,3 +358,58 @@ func (r *DBRepo) GetMetric(ctx context.Context, mType string, id string) (metric
 
 	return metric, NewStorageError(BadMetricType, metric.MType, metric.ID)
 }
+
+func (r *DBRepo) SaveMetrics(ctx context.Context, list []metrics.Metrics) error {
+	tx, err := r.conn.BeginTx(ctx, nil)
+	defer tx.Commit()
+	if err != nil {
+		return fmt.Errorf("error beginning transaction: %v", err)
+	}
+
+	gaugeQuery := `
+		INSERT INTO metrics (id ,type, value) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value
+	`
+	gaugeStmt, err := tx.PrepareContext(ctx, gaugeQuery)
+	if err != nil {
+		return fmt.Errorf("error preparing gauge query: %v", err)
+	}
+	defer gaugeStmt.Close()
+
+	counterQuery := `
+		INSERT INTO metrics (id ,type, delta) 
+		VALUES ($1, $2, $3) 
+		ON CONFLICT (id) DO UPDATE SET delta = metrics.delta + EXCLUDED.delta
+	`
+	counterStmt, err := tx.PrepareContext(ctx, counterQuery)
+	if err != nil {
+		return fmt.Errorf("error preparing counter query: %v", err)
+	}
+	defer counterStmt.Close()
+
+	for _, metric := range list {
+		if metric.MType == metrics.Gauge {
+			_, err = gaugeStmt.ExecContext(ctx, metric.ID, metric.MType, metric.Value)
+			if err != nil {
+				_ = tx.Rollback()
+				return fmt.Errorf("error updating metrics: %v", err)
+			}
+			continue
+		}
+
+		if metric.MType == metrics.Counter {
+			_, err = counterStmt.ExecContext(ctx, metric.ID, metric.MType, metric.Delta)
+			if err != nil {
+				_ = tx.Rollback()
+				return fmt.Errorf("error updating metrics: %v", err)
+			}
+			continue
+		}
+
+		_ = tx.Rollback()
+		return fmt.Errorf("unknown metric type: %v", metric.MType)
+	}
+
+	return nil
+}

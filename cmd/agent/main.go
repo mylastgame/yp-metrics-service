@@ -27,7 +27,7 @@ func main() {
 	}
 
 	//Sender := sender.NewHTTPSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "update")
-	Sender := sender.NewRESTSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "update", log)
+	Sender := sender.NewRESTSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "updates", log)
 	Storage := storage.NewMemStorage()
 	App := app.New(Storage, Sender, collector.New(Storage), log)
 	log.Log.Sugar().Infof("Agent started. Poll interval: %ds, report interval: %ds, endpoint: %s",
@@ -46,7 +46,8 @@ func main() {
 		case <-pollTicker.C:
 			App.Collect()
 		case <-sendTicker.C:
-			App.Send()
+			//	App.Send()
+			App.SendBatch()
 		case <-ctx.Done():
 			return
 		}

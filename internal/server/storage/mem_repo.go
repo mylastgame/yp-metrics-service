@@ -154,12 +154,18 @@ func (r *MemRepo) GetCounters(ctx context.Context) (metrics.CounterList, error) 
 
 func (r *MemRepo) SaveMetric(ctx context.Context, metric metrics.Metrics) error {
 	if metric.MType == metrics.Gauge {
-		r.SetGauge(ctx, metric.ID, *metric.Value)
+		err := r.SetGauge(ctx, metric.ID, *metric.Value)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
 	if metric.MType == metrics.Counter {
-		r.SetCounter(ctx, metric.ID, *metric.Delta)
+		err := r.SetCounter(ctx, metric.ID, *metric.Delta)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -195,6 +201,17 @@ func (r *MemRepo) GetMetric(ctx context.Context, mType string, id string) (metri
 	}
 
 	return metric, NewStorageError(BadMetricType, metric.MType, metric.ID)
+}
+
+func (r *MemRepo) SaveMetrics(ctx context.Context, list []metrics.Metrics) error {
+	for _, metric := range list {
+		err := r.SaveMetric(ctx, metric)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *MemRepo) Ping() error {

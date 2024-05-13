@@ -6,4 +6,5 @@ import (
 
 type Sender interface {
 	Send(metric metrics.Metrics) error
+	SendBatch([]metrics.Metrics) error
 }

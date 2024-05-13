@@ -26,6 +26,7 @@ func NewRouter(repo storage.Repo, f storage.PersistentStorage, log *logger.Logge
 
 	r.Post("/update/{type}/{title}/{val}", midleware.WithLogging(midleware.GzipMiddleware(h.UpdateHandler), log))
 	r.Post("/update/", midleware.WithLogging(midleware.GzipMiddleware(h.RestUpdateHandler), log))
+	r.Post("/updates/", midleware.WithLogging(midleware.GzipMiddleware(h.RestUpdatesHandler), log))
 	r.Get("/value/{type}/{title}", midleware.WithLogging(midleware.GzipMiddleware(h.GetHandler), log))
 	r.Post("/value/", midleware.WithLogging(midleware.GzipMiddleware(h.RestGetHandler), log))
 	//r.Route("/value", func(r chi.Router) {

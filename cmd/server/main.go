@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/mylastgame/yp-metrics-service/internal/core"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
@@ -38,13 +39,18 @@ func main() {
 	} else {
 		var db *sql.DB
 		db, err = sql.Open("pgx", config.DBConnect)
+		defer db.Close()
 		if err != nil {
 			log.Sugar.Errorf("Error connecting to database: %v", err)
 			panic(err)
 		}
 
 		//create DB repo
-		repo, err = storage.NewDBRepo(ctx, db)
+		err = core.Retry("init DB repo", 3, func() error {
+			repo, err = storage.NewDBRepo(ctx, db)
+			return err
+		}, log)
+
 		if err != nil {
 			log.Sugar.Error(err)
 			panic(err)

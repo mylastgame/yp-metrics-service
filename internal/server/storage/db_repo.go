@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/service/convert"
@@ -81,7 +82,7 @@ func (r *DBRepo) Get(ctx context.Context, t string, k string) (string, error) {
 	if t == metrics.Gauge {
 		val, err := r.GetGauge(ctx, k)
 		if err != nil {
-			if err != ErrorNotExists {
+			if !errors.Is(err, ErrorNotExists) {
 				return "", fmt.Errorf("error getting metrics: %v", err)
 			}
 
@@ -94,7 +95,7 @@ func (r *DBRepo) Get(ctx context.Context, t string, k string) (string, error) {
 	if t == metrics.Counter {
 		val, err := r.GetCounter(ctx, k)
 		if err != nil {
-			if err != ErrorNotExists {
+			if !errors.Is(err, ErrorNotExists) {
 				return "", fmt.Errorf("error getting metrics: %v", err)
 			}
 

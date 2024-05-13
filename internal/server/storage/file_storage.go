@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
@@ -55,7 +56,7 @@ func (s *FileStorage) Save(ctx context.Context) error {
 	enc.SetIndent("", "")
 
 	gauges, err = s.repo.GetGauges(ctx)
-	if err != nil && err != ErrorNotExists {
+	if err != nil && !errors.Is(err, ErrorNotExists) {
 		return err
 	}
 	for k, v := range gauges {
@@ -67,7 +68,7 @@ func (s *FileStorage) Save(ctx context.Context) error {
 	}
 
 	counters, err = s.repo.GetCounters(ctx)
-	if err != nil && err != ErrorNotExists {
+	if err != nil && !errors.Is(err, ErrorNotExists) {
 		return err
 	}
 	for k, v := range counters {

@@ -1,6 +1,9 @@
 package storage
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 const (
 	BadMetricType = 1 + iota
@@ -12,6 +15,8 @@ type StorageError struct {
 	Code int
 	Msg  string
 }
+
+var ErrorNotExists = errors.New("value not exists")
 
 func NewStorageError(code int, t string, k string) *StorageError {
 	return &StorageError{Code: code, Msg: createMessage(code, t, k)}

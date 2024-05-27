@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/server/app"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
 	"net/http"
-	"time"
 )
 
 func main() {
@@ -27,42 +27,43 @@ func main() {
 		panic(err)
 	}
 
+	//Context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	//init memory repository
-	repo := storage.NewMemRepo()
+	var repo storage.Repo
+	if config.DBConnect == "" {
+		repo = storage.NewMemRepo()
+	} else {
+		var db *sql.DB
+		db, err = sql.Open("pgx", config.DBConnect)
+		if err != nil {
+			log.Sugar.Errorf("Error connecting to database: %v", err)
+			panic(err)
+		}
+
+		//create DB repo
+		repo, err = storage.NewDBRepo(ctx, db)
+		if err != nil {
+			log.Sugar.Error(err)
+			panic(err)
+		}
+	}
 
 	//init file storage
 	fileStorage := storage.NewFileStorage(repo, log)
 
 	//restore from file
 	if config.Restore {
-		err = fileStorage.Restore()
+		err = fileStorage.Restore(ctx)
 		if err != nil {
 			log.Sugar.Errorf("Error restoring data: %v", err)
 			panic(err)
 		}
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	if config.StoreInterval != 0 {
-		//run store to file go-routine
-		go func(ctx context.Context) {
-			storeTicker := time.NewTicker(time.Duration(config.StoreInterval) * time.Second)
-			for {
-				select {
-				case <-ctx.Done():
-					return
-				case <-storeTicker.C:
-					err := fileStorage.Save()
-					if err != nil {
-						log.Sugar.Errorf("Error saving file: %v", err)
-						return
-					}
-				}
-
-			}
-		}(ctx)
-	}
+	app.BackupMetrics(ctx, fileStorage, log)
 
 	r := app.NewRouter(repo, fileStorage, log)
 	log.Sugar.Infof("Starting server. Listening on %s", config.RunAddr)

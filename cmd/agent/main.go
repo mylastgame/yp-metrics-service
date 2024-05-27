@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/collector"
@@ -32,6 +33,9 @@ func main() {
 	log.Log.Sugar().Infof("Agent started. Poll interval: %ds, report interval: %ds, endpoint: %s",
 		cfg.PollInterval, cfg.ReportInterval, cfg.EndpointAddr)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	pollTicker := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
 	timer := time.NewTimer(100 * time.Millisecond)
 	<-timer.C
@@ -41,9 +45,10 @@ func main() {
 		select {
 		case <-pollTicker.C:
 			App.Collect()
-
 		case <-sendTicker.C:
 			App.Send()
+		case <-ctx.Done():
+			return
 		}
 	}
 }

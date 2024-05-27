@@ -32,7 +32,7 @@ func NewRouter(repo storage.Repo, f storage.PersistentStorage, log *logger.Logge
 	//	r.Get("/gauge/{title}", h.GetGaugeHandler)
 	//	r.Get("/counter/{title}", h.GetCounterHandler)
 	//})
-
+	r.Get("/ping", midleware.WithLogging(midleware.GzipMiddleware(h.PingHandler), log))
 	r.Get("/", midleware.WithLogging(midleware.GzipMiddleware(h.GetAllHandler), log))
 
 	return r

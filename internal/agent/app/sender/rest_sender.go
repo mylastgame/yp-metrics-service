@@ -58,9 +58,9 @@ func (s *RESTSender) sendData(body []byte) error {
 	client := resty.New()
 	client.
 		// устанавливаем количество повторений
-		SetRetryCount(3).
+		//SetRetryCount(3).
 		// длительность ожидания между попытками
-		SetRetryWaitTime(100 * time.Millisecond).
+		//SetRetryWaitTime(100 * time.Millisecond).
 		// длительность максимального ожидания
 		SetRetryMaxWaitTime(301 * time.Millisecond)
 
@@ -71,8 +71,8 @@ func (s *RESTSender) sendData(body []byte) error {
 		Post(req)
 
 	if err != nil {
-		s.logger.Log.Error("error sending metrics request: " + err.Error())
-		return err
+		//s.logger.Log.Error("error sending metrics request: " + err.Error())
+		return NewErrSendRequest(err)
 	}
 
 	if res.StatusCode() != http.StatusOK {

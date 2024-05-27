@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/mylastgame/yp-metrics-service/internal/core"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"go.uber.org/zap"
 	"net/http"
@@ -19,7 +20,9 @@ func (h *Handler) RestUpdatesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.repo.SaveMetrics(ctx, metrics)
+	err = core.Retry("save metrics", 3, func() error {
+		return h.repo.SaveMetrics(ctx, metrics)
+	}, h.logger)
 	if err != nil {
 		h.logger.Log.Error("saving metrics error", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusInternalServerError)

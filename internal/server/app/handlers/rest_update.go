@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
+	"github.com/mylastgame/yp-metrics-service/internal/core"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/server/config"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
@@ -26,7 +28,10 @@ func (h *Handler) RestUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.repo.SaveMetric(ctx, metric)
+	err = core.Retry("save metric", 3, func() error {
+		return h.repo.SaveMetric(ctx, metric)
+	}, h.logger)
+
 	if err != nil {
 		h.logger.Log.Error("Update metric error", zap.Error(err))
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -43,9 +48,13 @@ func (h *Handler) RestUpdateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	respMetric, err := h.repo.GetMetric(ctx, metric.MType, metric.ID)
+	var respMetric metrics.Metrics
+	err = core.Retry("get response metric", 3, func() error {
+		respMetric, err = h.repo.GetMetric(ctx, metric.MType, metric.ID)
+		return err
+	}, h.logger)
 	if err != nil {
-		if err == storage.ErrorNotExists {
+		if errors.Is(err, storage.ErrorNotExists) {
 			h.logger.Log.Error("error when getting updated metric", zap.Error(err))
 			http.Error(w, "error when getting updated metric", http.StatusInternalServerError)
 			return

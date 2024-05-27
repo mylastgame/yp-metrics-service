@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/mylastgame/yp-metrics-service/internal/core"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"go.uber.org/zap"
 	"net/http"
@@ -31,7 +32,12 @@ func (h *Handler) RestGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respMetric, err := h.repo.GetMetric(ctx, metric.MType, metric.ID)
+	var respMetric metrics.Metrics
+	err = core.Retry("get response metric", 3, func() error {
+		respMetric, err = h.repo.GetMetric(ctx, metric.MType, metric.ID)
+		return err
+	}, h.logger)
+
 	if err != nil {
 		//if err == storage.ErrorNotExists {
 		h.logger.Log.Info("metric not found", zap.String("type", metric.MType), zap.String("id", metric.ID))

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/server/storage"
@@ -17,14 +18,14 @@ func (h *Handler) GetAllHandler(w http.ResponseWriter, r *http.Request) {
 	)
 
 	gauges, err = h.repo.GetGauges(ctx)
-	if err != nil && err != storage.ErrorNotExists {
+	if err != nil && !errors.Is(err, storage.ErrorNotExists) {
 		h.logger.Sugar.Errorf("GetAllHandler: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	counters, err = h.repo.GetCounters(ctx)
-	if err != nil && err != storage.ErrorNotExists {
+	if err != nil && !errors.Is(err, storage.ErrorNotExists) {
 		h.logger.Sugar.Errorf("GetAllHandler: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return

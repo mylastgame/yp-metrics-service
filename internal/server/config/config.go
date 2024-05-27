@@ -13,6 +13,7 @@ var StoreInterval int
 var FileStoragePath string
 var Restore bool
 var DBConnect string
+var Key string
 
 // parseFlags обрабатывает аргументы командной строки
 // и сохраняет их значения в соответствующих переменных
@@ -26,6 +27,7 @@ func ParseFlags() error {
 	flag.BoolVar(&Restore, "r", true, "restore metrics from file")
 	//flag.StringVar(&DBConnect, "d", "host=localhost user=developer password=dev123 dbname=yp_metrics sslmode=disable", "DB connection string")
 	flag.StringVar(&DBConnect, "d", "", "DB connection string")
+	flag.StringVar(&Key, "k", "", "key for SHA256 hash")
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 
@@ -59,6 +61,10 @@ func ParseFlags() error {
 
 	if envDBConnect := os.Getenv("DATABASE_DSN"); envDBConnect != "" {
 		DBConnect = envDBConnect
+	}
+
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		Key = envKey
 	}
 
 	return nil

@@ -36,6 +36,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 
 func WithLogging(h http.HandlerFunc, log *logger.Logger) http.HandlerFunc {
 	logFn := func(w http.ResponseWriter, r *http.Request) {
+		log.Sugar.Infof("LOGGING")
 		start := time.Now()
 
 		responseData := &responseData{

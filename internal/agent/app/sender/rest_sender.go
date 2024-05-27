@@ -1,13 +1,15 @@
 package sender
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/go-resty/resty/v2"
+	"github.com/mylastgame/yp-metrics-service/internal/agent/config"
+	"github.com/mylastgame/yp-metrics-service/internal/core/hash"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
 	"github.com/mylastgame/yp-metrics-service/internal/service"
-	"log"
 	"net/http"
 	"time"
 )
@@ -17,10 +19,11 @@ type RESTSender struct {
 	method   string
 	path     string
 	logger   *logger.Logger
+	cfg      *config.Config
 }
 
-func NewRESTSender(e, m, p string, log *logger.Logger) *RESTSender {
-	return &RESTSender{endpoint: e, method: m, path: p, logger: log}
+func NewRESTSender(e, m, p string, log *logger.Logger, cfg *config.Config) *RESTSender {
+	return &RESTSender{endpoint: e, method: m, path: p, logger: log, cfg: cfg}
 }
 
 func (s *RESTSender) Send(m metrics.Metrics) error {
@@ -48,10 +51,25 @@ func (s *RESTSender) SendBatch(list []metrics.Metrics) error {
 }
 
 func (s *RESTSender) sendData(body []byte) error {
+	var (
+		hashCode []byte
+		err      error
+	)
+
+	if s.cfg.Key != "" {
+		//create request hash
+		hashCode, err = hash.GetSHA256Hash(s.cfg.Key, body)
+
+		if err != nil {
+			return fmt.Errorf("error while calculate hash of metrics data: %s", err.Error())
+		}
+
+	}
+
 	// сжимаем содержимое data
 	bodyCompressed, err := service.Compress(body)
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("error while compressing data: %s", err.Error())
 	}
 
 	req := fmt.Sprintf("%s/%s/", s.endpoint, s.path)
@@ -64,14 +82,19 @@ func (s *RESTSender) sendData(body []byte) error {
 		// длительность максимального ожидания
 		SetRetryMaxWaitTime(301 * time.Millisecond)
 
-	res, err := client.R().
+	r := client.R().
 		SetHeader("Content-Type", "application/json").
-		SetHeader("Content-Encoding", "gzip").
-		SetBody(bodyCompressed).
+		SetHeader("Content-Encoding", "gzip")
+
+	if s.cfg.Key != "" {
+		r = r.SetHeader("HashSHA256", string(base64.URLEncoding.EncodeToString(hashCode)))
+	}
+
+	res, err := r.SetBody(bodyCompressed).
 		Post(req)
 
 	if err != nil {
-		//s.logger.Log.Error("error sending metrics request: " + err.Error())
+		s.logger.Log.Error("error sending metrics request: " + err.Error())
 		return NewErrSendRequest(err)
 	}
 

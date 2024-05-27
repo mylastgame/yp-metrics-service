@@ -25,16 +25,16 @@ func NewRouter(repo storage.Repo, f storage.PersistentStorage, log *logger.Logge
 	//})
 
 	r.Post("/update/{type}/{title}/{val}", midleware.WithLogging(midleware.GzipMiddleware(h.UpdateHandler), log))
-	r.Post("/update/", midleware.WithLogging(midleware.GzipMiddleware(h.RestUpdateHandler), log))
-	r.Post("/updates/", midleware.WithLogging(midleware.GzipMiddleware(h.RestUpdatesHandler), log))
-	r.Get("/value/{type}/{title}", midleware.WithLogging(midleware.GzipMiddleware(h.GetHandler), log))
-	r.Post("/value/", midleware.WithLogging(midleware.GzipMiddleware(h.RestGetHandler), log))
+	r.Post("/update/", midleware.WithLogging(midleware.GzipMiddleware(midleware.WithHash(h.RestUpdateHandler, log)), log))
+	r.Post("/updates/", midleware.WithLogging(midleware.GzipMiddleware(midleware.WithHash(h.RestUpdatesHandler, log)), log))
+	r.Get("/value/{type}/{title}", midleware.WithLogging(midleware.GzipMiddleware(midleware.WithHash(h.GetHandler, log)), log))
+	r.Post("/value/", midleware.WithLogging(midleware.GzipMiddleware(midleware.WithHash(h.RestGetHandler, log)), log))
 	//r.Route("/value", func(r chi.Router) {
 	//	r.Get("/gauge/{title}", h.GetGaugeHandler)
 	//	r.Get("/counter/{title}", h.GetCounterHandler)
 	//})
 	r.Get("/ping", midleware.WithLogging(midleware.GzipMiddleware(h.PingHandler), log))
-	r.Get("/", midleware.WithLogging(midleware.GzipMiddleware(h.GetAllHandler), log))
+	r.Get("/", midleware.WithLogging(midleware.GzipMiddleware(midleware.WithHash(h.GetAllHandler, log)), log))
 
 	return r
 }

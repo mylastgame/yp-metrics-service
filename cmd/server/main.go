@@ -73,10 +73,11 @@ func main() {
 
 	r := app.NewRouter(repo, fileStorage, log)
 	log.Sugar.Infof("Starting server. Listening on %s", config.RunAddr)
-	log.Sugar.Infof("Store file: %s, interval: %d, restore: %t",
+	log.Sugar.Infof("Store file: %s, interval: %d, restore: %t, key: %s",
 		config.FileStoragePath,
 		config.StoreInterval,
 		config.Restore,
+		config.Key,
 	)
 	log.Sugar.Infof("DB connecting data: %s", config.DBConnect)
 

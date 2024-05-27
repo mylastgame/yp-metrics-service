@@ -10,6 +10,7 @@ type Config struct {
 	EndpointAddr   string
 	PollInterval   int
 	ReportInterval int
+	Key            string
 }
 
 // parseFlags обрабатывает аргументы командной строки
@@ -19,11 +20,13 @@ func Create() (Config, error) {
 		EndpointAddr:   "",
 		PollInterval:   0,
 		ReportInterval: 0,
+		Key:            "",
 	}
 
 	flag.StringVar(&cfg.EndpointAddr, "a", "localhost:8080", "address and port to run server")
 	flag.IntVar(&cfg.PollInterval, "p", 2, "Poll interval in seconds")
 	flag.IntVar(&cfg.ReportInterval, "r", 10, "Report interval in seconds")
+	flag.StringVar(&cfg.Key, "k", "", "key for SHA256 hash")
 	// парсим переданные серверу аргументы в зарегистрированные переменные
 	flag.Parse()
 
@@ -48,6 +51,10 @@ func Create() (Config, error) {
 		} else {
 			cfg.PollInterval = v
 		}
+	}
+
+	if envKey := os.Getenv("KEY"); envKey != "" {
+		cfg.Key = envKey
 	}
 
 	return cfg, nil

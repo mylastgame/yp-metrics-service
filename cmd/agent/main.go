@@ -27,11 +27,11 @@ func main() {
 	}
 
 	//Sender := sender.NewHTTPSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "update")
-	Sender := sender.NewRESTSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "updates", log)
+	Sender := sender.NewRESTSender(fmt.Sprintf("http://%s", cfg.EndpointAddr), http.MethodPost, "updates", log, &cfg)
 	Storage := storage.NewMemStorage()
 	App := app.New(Storage, Sender, collector.New(Storage), log)
-	log.Log.Sugar().Infof("Agent started. Poll interval: %ds, report interval: %ds, endpoint: %s",
-		cfg.PollInterval, cfg.ReportInterval, cfg.EndpointAddr)
+	log.Log.Sugar().Infof("Agent started. Poll interval: %ds, report interval: %ds, endpoint: %s, key: %s",
+		cfg.PollInterval, cfg.ReportInterval, cfg.EndpointAddr, cfg.Key)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

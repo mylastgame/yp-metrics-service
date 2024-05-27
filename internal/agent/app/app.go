@@ -50,3 +50,24 @@ func (a *app) Send() {
 	a.logger.Log.Info("Sending finished")
 	a.storage.ResetCounters()
 }
+
+func (a *app) SendBatch() {
+	gauges := a.storage.GetGauges()
+	counters := a.storage.GetCounters()
+	metricsList := make([]metrics.Metrics, 0)
+
+	for t, v := range gauges {
+		metricsList = append(metricsList, metrics.Metrics{MType: metrics.Gauge, ID: t, Value: &v})
+	}
+
+	for t, v := range counters {
+		metricsList = append(metricsList, metrics.Metrics{MType: metrics.Counter, ID: t, Delta: &v})
+	}
+
+	err := a.sender.SendBatch(metricsList)
+	if err != nil {
+		a.logger.Log.Error(err.Error())
+	}
+	a.logger.Log.Info("Sending finished")
+	a.storage.ResetCounters()
+}

@@ -30,6 +30,24 @@ func (s *RESTSender) Send(m metrics.Metrics) error {
 		return err
 	}
 
+	return s.sendData(body)
+}
+
+func (s *RESTSender) SendBatch(list []metrics.Metrics) error {
+	if len(list) == 0 {
+		return fmt.Errorf("empty metrics list, sending canceled")
+	}
+
+	body, err := json.Marshal(list)
+	if err != nil {
+		s.logger.Log.Error("marshal metrics error: " + err.Error())
+		return err
+	}
+
+	return s.sendData(body)
+}
+
+func (s *RESTSender) sendData(body []byte) error {
 	// сжимаем содержимое data
 	bodyCompressed, err := service.Compress(body)
 	if err != nil {

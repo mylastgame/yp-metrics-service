@@ -16,5 +16,6 @@ type Repo interface {
 	GetCounters(context.Context) (metrics.CounterList, error)
 	SaveMetric(context.Context, metrics.Metrics) error
 	GetMetric(context.Context, string, string) (metrics.Metrics, error)
+	SaveMetrics(context.Context, []metrics.Metrics) error
 	Ping() error
 }

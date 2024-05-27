@@ -32,7 +32,7 @@ func WithHash(h http.HandlerFunc, log *logger.Logger) http.HandlerFunc {
 		}
 		reqHash := r.Header.Get("Hash")
 
-		if reqHash == "" {
+		if reqHash == "" || reqHash == "none" {
 			//log.Sugar.Errorf("Empty hash")
 			//w.WriteHeader(http.StatusBadRequest)
 			//return

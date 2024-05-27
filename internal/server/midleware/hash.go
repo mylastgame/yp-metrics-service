@@ -10,14 +10,27 @@ import (
 	"net/http"
 )
 
+type hashWriter struct {
+	http.ResponseWriter
+	body []byte
+}
+
+func newHashWriter(w http.ResponseWriter) *hashWriter {
+	return &hashWriter{w, []byte{}}
+}
+
+func (hw *hashWriter) Write(p []byte) (int, error) {
+	hw.body = p
+	return hw.ResponseWriter.Write(p)
+}
+
 func WithHash(h http.HandlerFunc, log *logger.Logger) http.HandlerFunc {
 	hashFn := func(w http.ResponseWriter, r *http.Request) {
-		log.Sugar.Infof("HASH")
 		if config.Key == "" {
 			h.ServeHTTP(w, r)
 			return
 		}
-		reqHash := r.Header.Get("HashSHA256")
+		reqHash := r.Header.Get("Hash")
 
 		if reqHash == "" {
 			log.Sugar.Errorf("Empty hash")
@@ -32,16 +45,17 @@ func WithHash(h http.HandlerFunc, log *logger.Logger) http.HandlerFunc {
 			return
 		}
 
+		r.Body.Close()
+		r.Body = io.NopCloser(bytes.NewBuffer(reqData))
+
 		calcHash, err := hash.GetSHA256Hash(config.Key, reqData)
 		if err != nil {
 			log.Sugar.Errorf("Error calculating hash: %v", err)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		log.Sugar.Infof("calcHash: %s", calcHash)
 
 		decodeHash, err := base64.URLEncoding.DecodeString(reqHash)
-		log.Sugar.Infof("decodeHash: %s", string(decodeHash))
 		if err != nil {
 			log.Sugar.Errorf("Error decoding hash: %v", err)
 		}
@@ -51,7 +65,20 @@ func WithHash(h http.HandlerFunc, log *logger.Logger) http.HandlerFunc {
 			return
 		}
 
-		h.ServeHTTP(w, r)
+		hw := newHashWriter(w)
+		h.ServeHTTP(hw, r)
+
+		if config.Key == "" {
+			return
+		}
+
+		respHash, err := hash.GetSHA256Hash(config.Key, hw.body)
+		if err != nil {
+			log.Sugar.Errorf("Error calculating hash: %v", err)
+			return
+		}
+
+		w.Header().Set("Hash", string(respHash))
 	}
 	return hashFn
 }

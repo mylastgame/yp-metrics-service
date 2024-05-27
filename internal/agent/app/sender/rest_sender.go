@@ -87,7 +87,7 @@ func (s *RESTSender) sendData(body []byte) error {
 		SetHeader("Content-Encoding", "gzip")
 
 	if s.cfg.Key != "" {
-		r = r.SetHeader("HashSHA256", string(base64.URLEncoding.EncodeToString(hashCode)))
+		r = r.SetHeader("Hash", base64.URLEncoding.EncodeToString(hashCode))
 	}
 
 	res, err := r.SetBody(bodyCompressed).

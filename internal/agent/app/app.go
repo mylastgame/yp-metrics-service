@@ -1,12 +1,15 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/collector"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/app/sender"
+	"github.com/mylastgame/yp-metrics-service/internal/agent/config"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/storage"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"github.com/mylastgame/yp-metrics-service/internal/core/metrics"
+	"sync"
 	"time"
 )
 
@@ -29,6 +32,15 @@ func New(storage storage.Storage, sender sender.Sender, collector *collector.Col
 func (a *app) Collect() {
 	a.collector.Collect()
 	a.logger.Log.Info("Collect finished")
+}
+
+func (a *app) CollectGOPSUtil() {
+	err := a.collector.CollectGOPSUtil()
+	if err != nil {
+		a.logger.Log.Error(err.Error())
+		return
+	}
+	a.logger.Log.Info("Collect GOPSUtil finished")
 }
 
 func (a *app) Send() {
@@ -91,4 +103,76 @@ func (a *app) SendBatch() {
 		a.logger.Sugar.Errorf("retrying number exceeded, error sending request: %s", err)
 		break
 	}
+}
+
+func (a *app) Run(ctx context.Context, cfg *config.Config) error {
+	wg := &sync.WaitGroup{}
+
+	//collecting
+	pollTicker1 := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
+	defer pollTicker1.Stop()
+	a.runJob(ctx, wg, pollTicker1.C, func() { a.Collect() })
+
+	//collecting GOPSUtil
+	pollTicker2 := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
+	defer pollTicker2.Stop()
+	a.runJob(ctx, wg, pollTicker2.C, func() { a.CollectGOPSUtil() })
+
+	timer := time.NewTimer(100 * time.Millisecond)
+	<-timer.C
+
+	sendTicker := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
+	defer sendTicker.Stop()
+
+	// создаем буферизованный канал для принятия задач
+	jobsCh := make(chan time.Time, cfg.RateLimit*3)
+	defer close(jobsCh)
+
+	//create worker pool
+	a.startWorkerPool(ctx, *cfg, jobsCh)
+	//sending data to server
+	a.runJob(ctx, wg, sendTicker.C, func() { jobsCh <- time.Now() })
+
+	wg.Wait()
+	return nil
+}
+
+func (a *app) runJob(ctx context.Context, wg *sync.WaitGroup, c <-chan time.Time, job func()) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case _, ok := <-c:
+				if !ok {
+					return
+				}
+				job()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+}
+
+// create worker pool
+func (a *app) startWorkerPool(ctx context.Context, cfg config.Config, jobs <-chan time.Time) {
+	//create working pool
+	for w := 0; w < cfg.RateLimit; w++ {
+		go func() {
+			for {
+				select {
+				case _, ok := <-jobs:
+					if !ok {
+						return
+					}
+					a.SendBatch()
+				case <-ctx.Done():
+					return
+				}
+			}
+		}()
+	}
+
+	a.logger.Sugar.Infof("Worker pool started with limit: %d", cfg.RateLimit)
 }

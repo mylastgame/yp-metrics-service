@@ -10,7 +10,6 @@ import (
 	"github.com/mylastgame/yp-metrics-service/internal/agent/storage"
 	"github.com/mylastgame/yp-metrics-service/internal/core/logger"
 	"net/http"
-	"time"
 )
 
 func main() {
@@ -36,20 +35,26 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	pollTicker := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
-	timer := time.NewTimer(100 * time.Millisecond)
-	<-timer.C
-	sendTicker := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
+	//pollTicker := time.NewTicker(time.Duration(cfg.PollInterval) * time.Second)
+	//timer := time.NewTimer(100 * time.Millisecond)
+	//<-timer.C
+	//sendTicker := time.NewTicker(time.Duration(cfg.ReportInterval) * time.Second)
 
-	for {
-		select {
-		case <-pollTicker.C:
-			App.Collect()
-		case <-sendTicker.C:
-			//	App.Send()
-			App.SendBatch()
-		case <-ctx.Done():
-			return
-		}
+	err = App.Run(ctx, &cfg)
+	if err != nil {
+		log.Sugar.Errorf("Error running app: %v", err)
+		panic(err)
 	}
+
+	//for {
+	//	select {
+	//	case <-pollTicker.C:
+	//		App.Collect()
+	//	case <-sendTicker.C:
+	//		//	App.Send()
+	//		App.SendBatch()
+	//	case <-ctx.Done():
+	//		return
+	//	}
+	//}
 }

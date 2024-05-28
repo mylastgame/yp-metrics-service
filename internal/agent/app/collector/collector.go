@@ -1,41 +1,47 @@
 package collector
 
 import (
+	"fmt"
 	"github.com/mylastgame/yp-metrics-service/internal/agent/storage"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 	"math/rand"
 	"runtime"
 )
 
 const (
-	Alloc         = "Alloc"
-	BuckHashSys   = "BuckHashSys"
-	Frees         = "Frees"
-	GCCPUFraction = "GCCPUFraction"
-	GCSys         = "GCSys"
-	HeapAlloc     = "HeapAlloc"
-	HeapIdle      = "HeapIdle"
-	HeapInuse     = "HeapInuse"
-	HeapObjects   = "HeapObjects"
-	HeapReleased  = "HeapReleased"
-	HeapSys       = "HeapSys"
-	LastGC        = "LastGC"
-	Lookups       = "Lookups"
-	MCacheInuse   = "MCacheInuse"
-	MCacheSys     = "MCacheSys"
-	MSpanInuse    = "MSpanInuse"
-	MSpanSys      = "MSpanSys"
-	Mallocs       = "Mallocs"
-	NextGC        = "NextGC"
-	NumForcedGC   = "NumForcedGC"
-	NumGC         = "NumGC"
-	OtherSys      = "OtherSys"
-	PauseTotalNs  = "PauseTotalNs"
-	StackInuse    = "StackInuse"
-	StackSys      = "StackSys"
-	Sys           = "Sys"
-	TotalAlloc    = "TotalAlloc"
-	PollCount     = "PollCount"
-	RandomValue   = "RandomValue"
+	Alloc          = "Alloc"
+	BuckHashSys    = "BuckHashSys"
+	Frees          = "Frees"
+	GCCPUFraction  = "GCCPUFraction"
+	GCSys          = "GCSys"
+	HeapAlloc      = "HeapAlloc"
+	HeapIdle       = "HeapIdle"
+	HeapInuse      = "HeapInuse"
+	HeapObjects    = "HeapObjects"
+	HeapReleased   = "HeapReleased"
+	HeapSys        = "HeapSys"
+	LastGC         = "LastGC"
+	Lookups        = "Lookups"
+	MCacheInuse    = "MCacheInuse"
+	MCacheSys      = "MCacheSys"
+	MSpanInuse     = "MSpanInuse"
+	MSpanSys       = "MSpanSys"
+	Mallocs        = "Mallocs"
+	NextGC         = "NextGC"
+	NumForcedGC    = "NumForcedGC"
+	NumGC          = "NumGC"
+	OtherSys       = "OtherSys"
+	PauseTotalNs   = "PauseTotalNs"
+	StackInuse     = "StackInuse"
+	StackSys       = "StackSys"
+	Sys            = "Sys"
+	TotalAlloc     = "TotalAlloc"
+	PollCount      = "PollCount"
+	RandomValue    = "RandomValue"
+	TotalMemory    = "TotalMemory"
+	FreeMemory     = "FreeMemory"
+	CPUutilization = "CPUutilization"
 )
 
 type Collector struct {
@@ -80,4 +86,25 @@ func (c *Collector) Collect() {
 
 	c.storage.SaveCounter(PollCount, 1)
 	c.storage.SaveGauge(RandomValue, rand.Float64())
+}
+
+func (c *Collector) CollectGOPSUtil() error {
+	m, err := mem.VirtualMemory()
+	if err != nil {
+		return fmt.Errorf("get virtual memory fail: %v", err)
+	}
+
+	c.storage.SaveGauge(TotalMemory, float64(m.Total))
+	c.storage.SaveGauge(FreeMemory, float64(m.Free))
+
+	cpus, err := cpu.Percent(0, true)
+	if err != nil {
+		return fmt.Errorf("get cpu percent fail: %v", err)
+	}
+
+	for i, cp := range cpus {
+		c.storage.SaveGauge(fmt.Sprintf("%s%d", CPUutilization, i+1), cp)
+	}
+
+	return nil
 }
